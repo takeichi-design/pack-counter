@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>パックカウンター</title>
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --card-bg:#ffffff;
+    --text:#1f2430;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --accent:#2563eb;
+    --danger:#dc2626;
+    --danger-dark:#b91c1c;
+    --neutral:#4b5563;
+    --neutral-dark:#374151;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+    touch-action:manipulation;
+    padding-bottom:40px;
+  }
+  header{
+    padding:16px 16px 6px;
+    text-align:center;
+  }
+  header h1{
+    margin:0;
+    font-size:1.3rem;
+    font-weight:700;
+  }
+  header p{
+    margin:4px 0 0;
+    font-size:0.75rem;
+    color:var(--muted);
+  }
+  .app{
+    max-width:640px;
+    margin:0 auto;
+    padding:0 10px;
+  }
+  .search-wrap{
+    margin-top:10px;
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    padding:6px 0;
+    z-index:5;
+  }
+  #searchInput{
+    width:100%;
+    padding:9px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    font-size:0.85rem;
+    background:#fff;
+  }
+  .pack-list{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    margin-top:6px;
+  }
+  .pack-row{
+    border-radius:8px;
+    padding:5px 8px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.1);
+    user-select:none;
+  }
+  .pack-row.hidden{
+    display:none;
+  }
+  .row-top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .row-name{
+    font-weight:700;
+    font-size:0.78rem;
+    line-height:1.2;
+    overflow-wrap:anywhere;
+  }
+  .row-prices{
+    font-size:0.66rem;
+    opacity:0.85;
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+  .row-controls{
+    display:flex;
+    gap:6px;
+    margin-top:3px;
+    flex-wrap:wrap;
+  }
+  .control-group{
+    display:flex;
+    align-items:center;
+    gap:3px;
+    background:rgba(255,255,255,0.3);
+    border-radius:7px;
+    padding:2px 4px;
+  }
+  .control-label{
+    font-size:0.62rem;
+    font-weight:700;
+    opacity:0.9;
+    margin-right:1px;
+  }
+  .ctrl-btn{
+    width:24px;
+    height:24px;
+    border-radius:6px;
+    border:none;
+    background:rgba(255,255,255,0.35);
+    color:inherit;
+    font-size:0.95rem;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    touch-action:manipulation;
+    padding:0;
+  }
+  .ctrl-btn:active{
+    background:rgba(255,255,255,0.6);
+    transform:scale(0.93);
+  }
+  .count{
+    min-width:18px;
+    text-align:center;
+    font-size:0.8rem;
+    font-weight:800;
+    font-variant-numeric:tabular-nums;
+  }
+  .summary{
+    margin-top:22px;
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 12px;
+  }
+  .summary h2{
+    margin:0 0 10px;
+    font-size:1rem;
+  }
+  .summary-empty{
+    font-size:0.8rem;
+    color:var(--muted);
+    padding:6px 2px;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.72rem;
+  }
+  th,td{
+    text-align:right;
+    padding:4px 3px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  th:first-child,td:first-child{
+    text-align:left;
+    white-space:normal;
+  }
+  tfoot td{
+    border-bottom:none;
+    padding-top:8px;
+  }
+  .grand-total-row td{
+    font-weight:800;
+    font-size:0.8rem;
+    color:var(--accent);
+  }
+  .actions{
+    margin-top:16px;
+    display:flex;
+    gap:10px;
+  }
+  .actions button{
+    flex:1;
+    padding:13px 0;
+    border-radius:12px;
+    border:none;
+    font-size:0.92rem;
+    font-weight:700;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  #resetBtn{
+    background:var(--danger);
+    color:#fff;
+  }
+  #resetBtn:active{background:var(--danger-dark);}
+  #undoBtn{
+    background:var(--neutral);
+    color:#fff;
+  }
+  #undoBtn:active{background:var(--neutral-dark);}
+  #undoBtn:disabled{
+    background:#d1d5db;
+    color:#9ca3af;
+    cursor:not-allowed;
+  }
+  .confirm-banner{
+    margin-top:10px;
+    background:#fef3c7;
+    border:1px solid #f59e0b;
+    color:#78350f;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:0.85rem;
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .confirm-banner.show{display:flex;}
+  .confirm-banner .confirm-buttons{display:flex; gap:6px;}
+  .confirm-banner button{
+    border:none;
+    border-radius:8px;
+    padding:6px 12px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .confirm-yes{background:var(--danger); color:#fff;}
+  .confirm-no{background:#fff; color:#78350f; border:1px solid #f59e0b !important;}
+  footer{
+    text-align:center;
+    font-size:0.68rem;
+    color:var(--muted);
+    margin-top:22px;
+    padding:0 16px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>パックカウンター</h1>
+    <p>開けたパック／BOXの＋／－をタップして記録してください</p>
+  </header>
+
+  <div class="search-wrap">
+    <input id="searchInput" type="text" placeholder="パック名で検索…" autocomplete="off">
+  </div>
+
+  <div class="pack-list" id="packList"></div>
+
+  <section class="summary">
+    <h2>集計（1個以上カウントされた項目のみ）</h2>
+    <div id="summaryEmpty" class="summary-empty">まだ何もカウントされていません</div>
+    <table id="summaryTable" style="display:none">
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>パック数</th>
+          <th>パック小計</th>
+          <th>BOX数</th>
+          <th>BOX小計</th>
+          <th>小計</th>
+        </tr>
+      </thead>
+      <tbody id="summaryBody"></tbody>
+      <tfoot>
+        <tr class="grand-total-row">
+          <td>合計</td>
+          <td id="grandPackCount">0</td>
+          <td id="grandPackMoney">¥0</td>
+          <td id="grandBoxCount">0</td>
+          <td id="grandBoxMoney">¥0</td>
+          <td id="grandTotal">¥0</td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <div class="actions">
+    <button id="resetBtn" type="button">リセット</button>
+    <button id="undoBtn" type="button" disabled>訂正（元に戻す）</button>
+  </div>
+
+  <div class="confirm-banner" id="confirmBanner">
+    <span>本当に全部リセットしますか？</span>
+    <div class="confirm-buttons">
+      <button type="button" class="confirm-no" id="confirmNo">やめる</button>
+      <button type="button" class="confirm-yes" id="confirmYes">リセットする</button>
+    </div>
+  </div>
+
+  <footer>データはこの端末内に保存されます（他の端末とは共有されません）</footer>
+</div>
+
+<script>
+(function(){
+  // ------------------------------------------------------------------
+  // 正規リスト（BOXメモPDFより）。 packPrice / boxPrice が null の項目は
+  // その種類のボタンを作りません。金額を直せば即反映されます。
+  // ------------------------------------------------------------------
+  var PACKS = [
+    { name:'シャイニースターV(プレ)', packPrice:null, boxPrice:14800, color:'黒' },
+    { name:'連撃マスター(プレ)', packPrice:580, boxPrice:null, color:'水色' },
+    { name:'白銀のランス(プレ)', packPrice:380, boxPrice:null, color:'ターコイズ' },
+    { name:'フュージョンアーツ(プレ)', packPrice:null, boxPrice:27800, color:'ピンク' },
+    { name:'タイムゲイザー(プレ)', packPrice:null, boxPrice:17800, color:'青' },
+    { name:'スペースジャグラー(プレ)', packPrice:300, boxPrice:null, color:'ピンク' },
+    { name:'Pokemon GO(安)', packPrice:null, boxPrice:6280, color:'青' },
+    { name:'VSTARユニバース(プレ)', packPrice:null, boxPrice:15800, color:'黄色' },
+    { name:'スカーレットex(安)', packPrice:null, boxPrice:4780, color:'オレンジ' },
+    { name:'バイオレットex', packPrice:null, boxPrice:5400, color:'青紫' },
+    { name:'クレイバースト(プレ)', packPrice:null, boxPrice:12800, color:'茶色' },
+    { name:'スノーハザード', packPrice:null, boxPrice:5400, color:'薄い水色' },
+    { name:'黒炎の支配者(プレ)', packPrice:null, boxPrice:19800, color:'黒' },
+    { name:'未来の一閃', packPrice:180, boxPrice:5400, color:'青' },
+    { name:'古代の咆哮', packPrice:null, boxPrice:5400, color:'オレンジ' },
+    { name:'シャイニートレジャー', packPrice:550, boxPrice:null, color:'黒' },
+    { name:'サイバージャッジ', packPrice:null, boxPrice:5400, color:'水色' },
+    { name:'ワイルドフォース(安)', packPrice:null, boxPrice:4980, color:'黄色' },
+    { name:'変幻の仮面(プレ)', packPrice:null, boxPrice:8980, color:'黄緑' },
+    { name:'ナイトワンダラー', packPrice:180, boxPrice:5400, color:'ピンク' },
+    { name:'ステラミラクル', packPrice:180, boxPrice:5400, color:'ターコイズ' },
+    { name:'楽園ドラゴーナ', packPrice:null, boxPrice:5400, color:'水色' },
+    { name:'超電ブレイカー', packPrice:null, boxPrice:5400, color:'黄色' },
+    { name:'超電ブレイカー(プレ)', packPrice:653, boxPrice:null, color:'黄色' },
+    { name:'テラスタルフェス', packPrice:550, boxPrice:null, color:'白' },
+    { name:'バトルパートナーズ(プレ)', packPrice:400, boxPrice:null, color:'水色' },
+    { name:'ロケット団の栄光(プレ)', packPrice:498, boxPrice:null, color:'赤' },
+    { name:'ブラックボルト(プレ)', packPrice:null, boxPrice:9980, color:'黒' },
+    { name:'ブラックボルト(デラックス)', packPrice:null, boxPrice:5800, color:'黒' },
+    { name:'ホワイトフレア', packPrice:290, boxPrice:null, color:'白' },
+    { name:'ホワイトフレア(プレ)', packPrice:null, boxPrice:8980, color:'白' },
+    { name:'ホワイトフレア(デラックス)', packPrice:null, boxPrice:5800, color:'白' },
+    { name:'メガブレイブ', packPrice:180, boxPrice:5400, color:'水色' },
+    { name:'メガブレイブ(プレ)', packPrice:394, boxPrice:11800, color:'青' },
+    { name:'メガシンフォニア', packPrice:180, boxPrice:5400, color:'ピンク' },
+    { name:'メガシンフォニア(プレ)', packPrice:417, boxPrice:8480, color:'赤紫' },
+    { name:'インフェルノX', packPrice:null, boxPrice:5400, color:'オレンジ' },
+    { name:'インフェルノX(プレ)', packPrice:293, boxPrice:null, color:'オレンジ' },
+    { name:'MEGAドリーム', packPrice:550, boxPrice:5500, color:'黒' },
+    { name:'MEGAドリーム(プレ)', packPrice:null, boxPrice:14800, color:'黒' },
+    { name:'ムニキスゼロ', packPrice:180, boxPrice:5400, color:'黄緑' },
+    { name:'ニンジャスピナー', packPrice:180, boxPrice:5400, color:'青' },
+    { name:'アビスアイ', packPrice:200, boxPrice:6000, color:'グレー' },
+    { name:'アビスアイ(安)', packPrice:150, boxPrice:null, color:'グレー' },
+    { name:'ストームエメラルダ', packPrice:200, boxPrice:6000, color:'オレンジ' },
+    { name:'30周年セレブレーション', packPrice:360, boxPrice:7200, color:'黄色' },
+    { name:'中国テラスタルフェス', packPrice:550, boxPrice:null, color:'水色' },
+    { name:'DESTINIED RIVALS', packPrice:931, boxPrice:null, color:'赤' },
+    { name:'TEMPORAL FORCES', packPrice:1100, boxPrice:null, color:'赤紫' },
+    { name:'PHANTASMAL FLAMES', packPrice:931, boxPrice:null, color:'オレンジ' },
+    { name:'MEGA EVOLUTION', packPrice:931, boxPrice:null, color:'青' },
+    { name:'SURGING SPARKS', packPrice:931, boxPrice:null, color:'黄色' },
+    { name:'JOURNEY TOGETHER', packPrice:931, boxPrice:null, color:'ターコイズ' },
+    { name:'PARADOX RIFT', packPrice:950, boxPrice:null, color:'水色' },
+    { name:'OBSIDIAN FLAMES', packPrice:950, boxPrice:null, color:'オレンジ' }
+  ];
+
+  var COLOR_MAP = {
+    '黒':'#262626',
+    '水色':'#38BDF8',
+    'ターコイズ':'#2DD4BF',
+    'ピンク':'#F472B6',
+    '青':'#3B82F6',
+    '黄色':'#FACC15',
+    'オレンジ':'#FB923C',
+    '青紫':'#818CF8',
+    '茶色':'#A16207',
+    '薄い水色':'#BAE6FD',
+    '黄緑':'#A3E635',
+    '白':'#F3F4F6',
+    '赤':'#EF4444',
+    '赤紫':'#C026D3',
+    'グレー':'#9CA3AF'
+  };
+
+  function textColorFor(hex){
+    var c = hex.replace('#','');
+    var r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+    var yiq = (r*299 + g*587 + b*114) / 1000;
+    return yiq >= 165 ? '#1f2430' : '#ffffff';
+  }
+
+  var STORAGE_KEY = 'packCounterState_v2';
+
+  function loadCounts(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return {};
+      var parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === 'object') ? parsed : {};
+    }catch(e){
+      return {};
+    }
+  }
+
+  function saveCounts(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(counts));
+    }catch(e){ /* localStorage が使えない環境は無視 */ }
+  }
+
+  var counts = loadCounts();
+  var lastCountsBeforeReset = null;
+
+  var packListEl = document.getElementById('packList');
+  var summaryBody = document.getElementById('summaryBody');
+  var summaryTable = document.getElementById('summaryTable');
+  var summaryEmpty = document.getElementById('summaryEmpty');
+  var grandPackCountEl = document.getElementById('grandPackCount');
+  var grandPackMoneyEl = document.getElementById('grandPackMoney');
+  var grandBoxCountEl = document.getElementById('grandBoxCount');
+  var grandBoxMoneyEl = document.getElementById('grandBoxMoney');
+  var grandTotalEl = document.getElementById('grandTotal');
+  var resetBtn = document.getElementById('resetBtn');
+  var undoBtn = document.getElementById('undoBtn');
+  var confirmBanner = document.getElementById('confirmBanner');
+  var confirmYes = document.getElementById('confirmYes');
+  var confirmNo = document.getElementById('confirmNo');
+  var searchInput = document.getElementById('searchInput');
+
+  function yen(n){
+    return '¥' + n.toLocaleString('ja-JP');
+  }
+
+  PACKS.forEach(function(p, i){
+    if(p.packPrice != null){
+      var pk = 'p' + i;
+      if(typeof counts[pk] !== 'number' || counts[pk] < 0) counts[pk] = 0;
+    }
+    if(p.boxPrice != null){
+      var bk = 'b' + i;
+      if(typeof counts[bk] !== 'number' || counts[bk] < 0) counts[bk] = 0;
+    }
+  });
+
+  function buildList(){
+    var html = '';
+    PACKS.forEach(function(p, i){
+      var bg = COLOR_MAP[p.color] || '#94A3B8';
+      var fg = textColorFor(bg);
+      var priceLabel = [];
+      if(p.packPrice != null) priceLabel.push('パック' + yen(p.packPrice));
+      if(p.boxPrice != null) priceLabel.push('BOX' + yen(p.boxPrice));
+
+      var controls = '';
+      if(p.packPrice != null){
+        var pk = 'p' + i;
+        controls +=
+          '<div class="control-group">' +
+            '<span class="control-label">パック</span>' +
+            '<button type="button" class="ctrl-btn minus" data-key="' + pk + '" aria-label="' + p.name + ' パックを1減らす">－</button>' +
+            '<span class="count" id="count-' + pk + '">0</span>' +
+            '<button type="button" class="ctrl-btn plus" data-key="' + pk + '" aria-label="' + p.name + ' パックを1増やす">＋</button>' +
+          '</div>';
+      }
+      if(p.boxPrice != null){
+        var bk = 'b' + i;
+        controls +=
+          '<div class="control-group">' +
+            '<span class="control-label">BOX</span>' +
+            '<button type="button" class="ctrl-btn minus" data-key="' + bk + '" aria-label="' + p.name + ' BOXを1減らす">－</button>' +
+            '<span class="count" id="count-' + bk + '">0</span>' +
+            '<button type="button" class="ctrl-btn plus" data-key="' + bk + '" aria-label="' + p.name + ' BOXを1増やす">＋</button>' +
+          '</div>';
+      }
+
+      html +=
+        '<div class="pack-row" data-name="' + p.name.toLowerCase() + '" style="background:' + bg + ';color:' + fg + '">' +
+          '<div class="row-top">' +
+            '<span class="row-name">' + p.name + '</span>' +
+            '<span class="row-prices">' + priceLabel.join(' / ') + '</span>' +
+          '</div>' +
+          '<div class="row-controls">' + controls + '</div>' +
+        '</div>';
+    });
+    packListEl.innerHTML = html;
+
+    packListEl.querySelectorAll('.plus').forEach(function(btn){
+      btn.addEventListener('click', function(){ changeCount(btn.getAttribute('data-key'), 1); });
+    });
+    packListEl.querySelectorAll('.minus').forEach(function(btn){
+      btn.addEventListener('click', function(){ changeCount(btn.getAttribute('data-key'), -1); });
+    });
+  }
+
+  function changeCount(key, delta){
+    var next = (counts[key] || 0) + delta;
+    if(next < 0) next = 0;
+    counts[key] = next;
+    saveCounts();
+    render();
+  }
+
+  function render(){
+    var rows = '';
+    var grandPackCount = 0, grandPackMoney = 0, grandBoxCount = 0, grandBoxMoney = 0;
+
+    PACKS.forEach(function(p, i){
+      var pk = 'p' + i, bk = 'b' + i;
+      var pc = p.packPrice != null ? (counts[pk] || 0) : 0;
+      var bc = p.boxPrice != null ? (counts[bk] || 0) : 0;
+
+      var pkCountEl = document.getElementById('count-' + pk);
+      if(pkCountEl) pkCountEl.textContent = pc;
+      var bkCountEl = document.getElementById('count-' + bk);
+      if(bkCountEl) bkCountEl.textContent = bc;
+
+      if(pc === 0 && bc === 0) return; // 集計は1個以上カウントされた項目のみ
+
+      var packSubtotal = pc * (p.packPrice || 0);
+      var boxSubtotal = bc * (p.boxPrice || 0);
+      var rowTotal = packSubtotal + boxSubtotal;
+
+      grandPackCount += pc;
+      grandPackMoney += packSubtotal;
+      grandBoxCount += bc;
+      grandBoxMoney += boxSubtotal;
+
+      rows += '<tr>' +
+        '<td>' + p.name + '</td>' +
+        '<td>' + (p.packPrice != null ? pc : '－') + '</td>' +
+        '<td>' + (p.packPrice != null ? yen(packSubtotal) : '－') + '</td>' +
+        '<td>' + (p.boxPrice != null ? bc : '－') + '</td>' +
+        '<td>' + (p.boxPrice != null ? yen(boxSubtotal) : '－') + '</td>' +
+        '<td>' + yen(rowTotal) + '</td>' +
+      '</tr>';
+    });
+
+    if(rows === ''){
+      summaryTable.style.display = 'none';
+      summaryEmpty.style.display = 'block';
+    }else{
+      summaryTable.style.display = 'table';
+      summaryEmpty.style.display = 'none';
+      summaryBody.innerHTML = rows;
+    }
+
+    grandPackCountEl.textContent = grandPackCount;
+    grandPackMoneyEl.textContent = yen(grandPackMoney);
+    grandBoxCountEl.textContent = grandBoxCount;
+    grandBoxMoneyEl.textContent = yen(grandBoxMoney);
+    grandTotalEl.textContent = yen(grandPackMoney + grandBoxMoney);
+  }
+
+  // --- 検索フィルタ ---
+  searchInput.addEventListener('input', function(){
+    var q = searchInput.value.trim().toLowerCase();
+    packListEl.querySelectorAll('.pack-row').forEach(function(row){
+      var match = !q || row.getAttribute('data-name').indexOf(q) !== -1;
+      row.classList.toggle('hidden', !match);
+    });
+  });
+
+  // --- リセット / 訂正（元に戻す） ---
+  resetBtn.addEventListener('click', function(){
+    confirmBanner.classList.add('show');
+  });
+
+  confirmNo.addEventListener('click', function(){
+    confirmBanner.classList.remove('show');
+  });
+
+  confirmYes.addEventListener('click', function(){
+    lastCountsBeforeReset = JSON.parse(JSON.stringify(counts));
+    Object.keys(counts).forEach(function(k){ counts[k] = 0; });
+    saveCounts();
+    render();
+    undoBtn.disabled = false;
+    confirmBanner.classList.remove('show');
+  });
+
+  undoBtn.addEventListener('click', function(){
+    if(!lastCountsBeforeReset) return;
+    counts = JSON.parse(JSON.stringify(lastCountsBeforeReset));
+    saveCounts();
+    render();
+    lastCountsBeforeReset = null;
+    undoBtn.disabled = true;
+  });
+
+  buildList();
+  render();
+})();
+</script>
+</body>
+</html>
