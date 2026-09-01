@@ -107,6 +107,8 @@
     background:rgba(255,255,255,0.3);
     border-radius:7px;
     padding:2px 4px;
+    border:2px solid transparent;
+    transition:background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .control-label{
     font-size:0.62rem;
@@ -140,6 +142,26 @@
     font-size:0.8rem;
     font-weight:800;
     font-variant-numeric:tabular-nums;
+    transition:color 0.15s ease, text-shadow 0.15s ease;
+  }
+  /* カウント中(count > 0)の項目を光らせて分かりやすくする */
+  .control-group.has-count{
+    background:rgba(255,255,255,0.65);
+    border-color:#fef08a;
+    box-shadow:0 0 0 2px rgba(255,255,255,0.9), 0 0 10px 2px rgba(250,204,21,0.85);
+  }
+  .control-group.has-count .count{
+    color:#dc2626;
+    text-shadow:0 0 4px rgba(220,38,38,0.35);
+  }
+  /* ＋をタップした瞬間の一瞬のフラッシュ演出 */
+  @keyframes tapFlash{
+    0%{ box-shadow:0 0 0 2px rgba(255,255,255,0.9), 0 0 4px 2px rgba(250,204,21,0.5); }
+    45%{ box-shadow:0 0 0 3px rgba(255,255,255,1), 0 0 16px 6px rgba(250,204,21,1); transform:scale(1.06); }
+    100%{ box-shadow:0 0 0 2px rgba(255,255,255,0.9), 0 0 10px 2px rgba(250,204,21,0.85); transform:scale(1); }
+  }
+  .control-group.tap-flash{
+    animation:tapFlash 0.35s ease;
   }
   .summary{
     margin-top:22px;
@@ -304,8 +326,9 @@
 <script>
 (function(){
   // ------------------------------------------------------------------
-  // 正規リスト（BOXメモPDFより）。 packPrice / boxPrice が null の項目は
+  // 正規リスト（パックBOXリスト91より）。 packPrice / boxPrice が null の項目は
   // その種類のボタンを作りません。金額を直せば即反映されます。
+  // B列・D列(パック金額・BOX金額)がどちらも未入力の項目は元データから除外済みです。
   // ------------------------------------------------------------------
   var PACKS = [
     { name:'シャイニースターV(プレ)', packPrice:null, boxPrice:14800, color:'黒' },
@@ -319,14 +342,14 @@
     { name:'スカーレットex(安)', packPrice:null, boxPrice:4780, color:'オレンジ' },
     { name:'バイオレットex', packPrice:null, boxPrice:5400, color:'青紫' },
     { name:'クレイバースト(プレ)', packPrice:null, boxPrice:12800, color:'茶色' },
-    { name:'スノーハザード', packPrice:null, boxPrice:5400, color:'薄い水色' },
+    { name:'スノーハザード', packPrice:null, boxPrice:5400, color:'水色' },
     { name:'黒炎の支配者(プレ)', packPrice:null, boxPrice:19800, color:'黒' },
     { name:'未来の一閃', packPrice:180, boxPrice:5400, color:'青' },
     { name:'古代の咆哮', packPrice:null, boxPrice:5400, color:'オレンジ' },
     { name:'シャイニートレジャー', packPrice:550, boxPrice:null, color:'黒' },
-    { name:'サイバージャッジ', packPrice:null, boxPrice:5400, color:'水色' },
+    { name:'サイバージャッジ', packPrice:null, boxPrice:5400, color:'ターコイズ' },
     { name:'ワイルドフォース(安)', packPrice:null, boxPrice:4980, color:'黄色' },
-    { name:'クリムゾンヘイズ', packPrice:null, boxPrice:15800, color:'赤' },
+    { name:'クリムゾンヘイズ(プレ)', packPrice:null, boxPrice:15800, color:'赤' },
     { name:'変幻の仮面(プレ)', packPrice:null, boxPrice:8980, color:'黄緑' },
     { name:'ナイトワンダラー', packPrice:180, boxPrice:5400, color:'ピンク' },
     { name:'ステラミラクル', packPrice:180, boxPrice:5400, color:'ターコイズ' },
@@ -334,8 +357,8 @@
     { name:'超電ブレイカー', packPrice:null, boxPrice:5400, color:'黄色' },
     { name:'超電ブレイカー(プレ)', packPrice:653, boxPrice:null, color:'黄色' },
     { name:'テラスタルフェス', packPrice:550, boxPrice:null, color:'白' },
-    { name:'テラスタルフェス(プレ)', packPrice:null, boxPrice:21800, color:'薄ピンク' },
-    { name:'バトルパートナーズ(プレ)', packPrice:400, boxPrice:null, color:'水色' },
+    { name:'テラスタルフェス(プレ)', packPrice:null, boxPrice:21800, color:'白' },
+    { name:'バトルパートナーズ(プレ)', packPrice:400, boxPrice:null, color:'ターコイズ' },
     { name:'熱風のアリーナ(プレ)', packPrice:null, boxPrice:22800, color:'オレンジ' },
     { name:'ロケット団の栄光(プレ)', packPrice:498, boxPrice:28800, color:'赤' },
     { name:'ブラックボルト(プレ)', packPrice:null, boxPrice:9980, color:'黒' },
@@ -345,21 +368,21 @@
     { name:'ホワイトフレア(デラックス)', packPrice:null, boxPrice:5800, color:'白' },
     { name:'メガブレイブ', packPrice:180, boxPrice:5400, color:'水色' },
     { name:'メガブレイブ(プレ)', packPrice:394, boxPrice:11800, color:'青' },
-    { name:'メガシンフォニア', packPrice:180, boxPrice:5400, color:'ピンク' },
-    { name:'メガシンフォニア(プレ)', packPrice:417, boxPrice:8480, color:'赤紫' },
+    { name:'メガシンフォニア', packPrice:180, boxPrice:5400, color:'赤紫' },
+    { name:'メガシンフォニア(プレ)', packPrice:417, boxPrice:8480, color:'ピンク' },
     { name:'インフェルノX', packPrice:null, boxPrice:5400, color:'オレンジ' },
     { name:'インフェルノX(プレ)', packPrice:293, boxPrice:null, color:'オレンジ' },
     { name:'MEGAドリーム', packPrice:550, boxPrice:5500, color:'黒' },
     { name:'MEGAドリーム(プレ)', packPrice:null, boxPrice:14800, color:'黒' },
-    { name:'ムニキスゼロ', packPrice:180, boxPrice:5400, color:'黄緑' },
+    { name:'ムニキスゼロ', packPrice:180, boxPrice:5400, color:'緑' },
     { name:'ニンジャスピナー', packPrice:180, boxPrice:5400, color:'青' },
-    { name:'ニンジャスピナー(プレ)', packPrice:null, boxPrice:12400, color:'水色' },
+    { name:'ニンジャスピナー(プレ)', packPrice:null, boxPrice:12400, color:'青' },
     { name:'アビスアイ', packPrice:200, boxPrice:6000, color:'グレー' },
     { name:'アビスアイ(プレ)', packPrice:null, boxPrice:11400, color:'グレー' },
     { name:'アビスアイ(安)', packPrice:140, boxPrice:null, color:'グレー' },
     { name:'ストームエメラルダ', packPrice:200, boxPrice:6000, color:'オレンジ' },
     { name:'30周年セレブレーション', packPrice:360, boxPrice:7200, color:'黄色' },
-    { name:'中国テラスタルフェス', packPrice:550, boxPrice:null, color:'水色' },
+    { name:'中国テラスタル', packPrice:550, boxPrice:null, color:'ターコイズ' },
     { name:'DESTINIED RIVALS', packPrice:931, boxPrice:null, color:'赤' },
     { name:'TEMPORAL FORCES', packPrice:1100, boxPrice:null, color:'赤紫' },
     { name:'PHANTASMAL FLAMES', packPrice:931, boxPrice:null, color:'オレンジ' },
@@ -380,8 +403,7 @@
     'オレンジ':'#FB923C',
     '青紫':'#818CF8',
     '茶色':'#A16207',
-    '薄ピンク':'#FBCFE8',
-    '薄い水色':'#BAE6FD',
+    '緑':'#22C55E',
     '黄緑':'#A3E635',
     '白':'#F3F4F6',
     '赤':'#EF4444',
@@ -396,7 +418,7 @@
     return yiq >= 165 ? '#1f2430' : '#ffffff';
   }
 
-  var STORAGE_KEY = 'packCounterState_v2';
+  var STORAGE_KEY = 'packCounterState_v3';
 
   function loadCounts(){
     try{
@@ -462,7 +484,7 @@
       if(p.packPrice != null){
         var pk = 'p' + i;
         controls +=
-          '<div class="control-group">' +
+          '<div class="control-group" data-group="' + pk + '">' +
             '<span class="control-label">パック</span>' +
             '<button type="button" class="ctrl-btn minus" data-key="' + pk + '" aria-label="' + p.name + ' パックを1減らす">－</button>' +
             '<span class="count" id="count-' + pk + '">0</span>' +
@@ -472,7 +494,7 @@
       if(p.boxPrice != null){
         var bk = 'b' + i;
         controls +=
-          '<div class="control-group">' +
+          '<div class="control-group" data-group="' + bk + '">' +
             '<span class="control-label">BOX</span>' +
             '<button type="button" class="ctrl-btn minus" data-key="' + bk + '" aria-label="' + p.name + ' BOXを1減らす">－</button>' +
             '<span class="count" id="count-' + bk + '">0</span>' +
@@ -492,7 +514,16 @@
     packListEl.innerHTML = html;
 
     packListEl.querySelectorAll('.plus').forEach(function(btn){
-      btn.addEventListener('click', function(){ changeCount(btn.getAttribute('data-key'), 1); });
+      btn.addEventListener('click', function(){
+        var group = btn.closest('.control-group');
+        changeCount(btn.getAttribute('data-key'), 1);
+        if(group){
+          group.classList.remove('tap-flash');
+          void group.offsetWidth; // reflow to restart the animation every tap
+          group.classList.add('tap-flash');
+          setTimeout(function(){ group.classList.remove('tap-flash'); }, 350);
+        }
+      });
     });
     packListEl.querySelectorAll('.minus').forEach(function(btn){
       btn.addEventListener('click', function(){ changeCount(btn.getAttribute('data-key'), -1); });
@@ -520,6 +551,12 @@
       if(pkCountEl) pkCountEl.textContent = pc;
       var bkCountEl = document.getElementById('count-' + bk);
       if(bkCountEl) bkCountEl.textContent = bc;
+
+      // カウントが1以上ならその項目を光らせる/文字を赤くする。0に戻れば自動で元に戻る。
+      var pkGroupEl = document.querySelector('.control-group[data-group="' + pk + '"]');
+      if(pkGroupEl) pkGroupEl.classList.toggle('has-count', pc > 0);
+      var bkGroupEl = document.querySelector('.control-group[data-group="' + bk + '"]');
+      if(bkGroupEl) bkGroupEl.classList.toggle('has-count', bc > 0);
 
       if(pc === 0 && bc === 0) return; // 集計は1個以上カウントされた項目のみ
 
