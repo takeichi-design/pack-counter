@@ -70,6 +70,35 @@
     font-size:0.85rem;
     background:#fff;
   }
+  /* --- ゾーンの見出しと仕切り線(パック一覧／集計／ログをはっきり区切る) --- */
+  .zone-heading{
+    margin:18px 2px 8px;
+    font-size:0.95rem;
+    font-weight:800;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .zone-heading::before{
+    content:'';
+    width:5px;
+    height:1.05em;
+    border-radius:3px;
+    background:var(--accent);
+    flex:0 0 auto;
+  }
+  .zone-divider{
+    height:5px;
+    border-radius:5px;
+    margin:26px 2px 20px;
+  }
+  .zone-divider-summary{
+    background:linear-gradient(90deg,#60a5fa,#bfe0ff);
+  }
+  .zone-divider-logs{
+    background:linear-gradient(90deg,#1f2430,#5b6472);
+  }
   .pack-list{
     display:flex;
     flex-direction:column;
@@ -174,20 +203,38 @@
   }
   section.summary, section.logs{
     margin-top:22px;
-    background:var(--card-bg);
-    border:1px solid var(--border);
     border-radius:14px;
     padding:14px 12px;
     scroll-margin-top:68px;
   }
-  .summary h2, .logs h2{
+  /* 集計＝ライトめのカード。ログ＝ダークめのカードにして一目で属性の違いが分かるようにする */
+  section.summary{
+    background:#eef4ff;
+    border:1px solid #c9ddff;
+    color:var(--text);
+  }
+  section.logs{
+    background:#1f2430;
+    border:1px solid #333c4f;
+    color:#e7eaf0;
+  }
+  .summary h2{
     margin:0 0 10px;
     font-size:1rem;
+    color:var(--text);
+  }
+  .logs h2{
+    margin:0 0 10px;
+    font-size:1rem;
+    color:#ffffff;
   }
   .summary-empty{
     font-size:0.8rem;
     color:var(--muted);
     padding:6px 2px;
+  }
+  .logs .summary-empty{
+    color:#9aa3b5;
   }
   table{
     width:100%;
@@ -295,6 +342,7 @@
     border-radius:10px;
     padding:10px 10px 8px;
     background:#fafafa;
+    color:var(--text);
   }
   .log-card-head{
     display:flex;
@@ -344,6 +392,7 @@
     border:1px solid var(--border);
     font-size:0.78rem;
     background:#fff;
+    color:var(--text);
   }
   /* --- 右下フローティングボタン --- */
   .scroll-fabs{
@@ -426,8 +475,10 @@
     <p>開けたパック／BOXの＋／－をタップして記録してください</p>
   </header>
 
+  <h2 class="zone-heading zone-heading-packs">パック／BOXの一覧</h2>
   <div class="pack-list" id="packList"></div>
 
+  <div class="zone-divider zone-divider-summary"></div>
   <section class="summary" id="summarySection">
     <h2>集計（1個以上カウントされた項目のみ）</h2>
     <div id="summaryEmpty" class="summary-empty">まだ何もカウントされていません</div>
@@ -461,11 +512,12 @@
     <button id="undoBtn" type="button" disabled>訂正（元に戻す）</button>
   </div>
 
+  <div class="zone-divider zone-divider-logs"></div>
   <section class="logs" id="logsSection">
     <h2>ログ</h2>
     <div class="save-log-row">
-      <button id="saveLogKeepBtn" type="button">ログを残す<br>（現集計を残したまま）</button>
-      <button id="saveLogResetBtn" type="button">ログを残す<br>（現集計をリセット）</button>
+      <button id="saveLogKeepBtn" type="button">ログを残す<br>（現カウントを残したまま）</button>
+      <button id="saveLogResetBtn" type="button">ログを残す<br>（現カウントをリセット）</button>
     </div>
     <div class="log-actions">
       <button id="resetLogsBtn" type="button" disabled>ログを全てリセット</button>
