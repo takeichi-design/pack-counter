@@ -758,7 +758,10 @@
     overseas: '🇺🇸🇹🇼海外パック'
   };
 
-  var PACKS = [
+  // BOOTSTRAP_PACKS は「スプレッドシートから一度もカタログを取得できていない時」専用の初期値。
+  // 連携設定後は、Apps Script側の「金額確認用」シートの内容（新しいパックや金額の自動更新を含む）
+  // で自動的に上書きされる。常にこの配列を直接使わず、可変の PACKS を使うこと。
+  var BOOTSTRAP_PACKS = [
     // --- 🇯🇵国内パック（シャイニースターV〜30周年セレブレーションを逆順に） ---
     { name:'30周年セレブレーション', packPrice:360, boxPrice:7200, color:'黄色', category:'domestic' },
     { name:'ストームエメラルダ', packPrice:200, boxPrice:6000, color:'オレンジ', category:'domestic' },
@@ -825,8 +828,18 @@
     { name:'OBSIDIAN FLAMES', packPrice:950, boxPrice:null, color:'オレンジ', category:'overseas' }
   ];
 
+  var CATALOG_CACHE_KEY = 'packCounterCatalogCache_v1';
+
+  // 可変のパック一覧。初期値は「前回取得したカタログのキャッシュ」→無ければ BOOTSTRAP_PACKS。
+  var cachedCatalog = loadJSON(CATALOG_CACHE_KEY, null);
+  var PACKS = (Array.isArray(cachedCatalog) && cachedCatalog.length > 0) ? cachedCatalog : BOOTSTRAP_PACKS;
+
   var PACKS_BY_NAME = {};
-  PACKS.forEach(function(p){ PACKS_BY_NAME[p.name] = p; });
+  function rebuildPacksByName(){
+    PACKS_BY_NAME = {};
+    PACKS.forEach(function(p){ PACKS_BY_NAME[p.name] = p; });
+  }
+  rebuildPacksByName();
 
   var COLOR_MAP = {
     '黒':'#262626',
@@ -940,8 +953,6 @@
   if(typeof appsScriptUrl !== 'string') appsScriptUrl = '';
   appsScriptUrlInput.value = appsScriptUrl;
 
-  var stockMap = {}; // name -> { packRemain, boxRemain }
-
   function setSettingsStatus(text, kind){
     settingsStatus.textContent = text;
     settingsStatus.classList.remove('ok','err');
@@ -986,12 +997,46 @@
     });
   }
 
+  // サーバー（Apps Script）から取得した最新カタログ（新規パック・金額の自動更新を含む）を
+  // PACKS に反映し、一覧を作り直す。取得に失敗した時やURL未設定の時は呼ばれず、
+  // 直前のキャッシュ（なければ BOOTSTRAP_PACKS）がそのまま使われ続ける。
+  function applyCatalog(serverCatalog){
+    if(!Array.isArray(serverCatalog) || serverCatalog.length === 0) return false;
+    var mapped = serverCatalog.map(function(row){
+      return {
+        name: row.name,
+        packPrice: row.packPrice,
+        boxPrice: row.boxPrice,
+        color: row.color || 'グレー',
+        category: row.category === 'overseas' ? 'overseas' : 'domestic',
+        packRemain: row.packRemain,
+        boxRemain: row.boxRemain
+      };
+    });
+    // スプレッドシート上は新規アイテムが末尾に追加されるため、見出しが分裂しないよう
+    // 国内→海外の順に安定ソートし直す（同じカテゴリ内の並び順は保たれる）。
+    mapped.sort(function(a, b){
+      var ra = a.category === 'overseas' ? 1 : 0;
+      var rb = b.category === 'overseas' ? 1 : 0;
+      return ra - rb;
+    });
+    PACKS = mapped;
+    rebuildPacksByName();
+    saveJSON(CATALOG_CACHE_KEY, PACKS);
+    ensureCountsInitialized();
+    buildList();
+    render();
+    renderLogs();
+    updateStockBadges();
+    return true;
+  }
+
   function fetchStock(){
     if(!appsScriptUrl){
-      setSettingsStatus('URLが未設定のため在庫は取得できません', 'err');
+      setSettingsStatus('URLが未設定のためカタログは取得できません', 'err');
       return Promise.resolve();
     }
-    setSettingsStatus('在庫を取得中…', null);
+    setSettingsStatus('カタログを取得中…', null);
     return fetch(appsScriptUrl, { method: 'GET' })
       .then(function(res){
         if(!res.ok) throw new Error('HTTP ' + res.status);
@@ -999,29 +1044,29 @@
       })
       .then(function(json){
         if(!json || json.ok !== true) throw new Error((json && json.error) || '不明なエラー');
-        stockMap = {};
-        (json.stock || []).forEach(function(row){
-          stockMap[row.name] = { packRemain: row.packRemain, boxRemain: row.boxRemain };
-        });
-        updateStockBadges();
+        var applied = applyCatalog(json.catalog);
         var now = new Date();
-        setSettingsStatus('在庫を更新しました（' + ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2) + '）', 'ok');
+        var timeStr = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
+        if(applied){
+          setSettingsStatus('カタログを更新しました（新しいパックや金額も反映、' + timeStr + '）', 'ok');
+        }else{
+          setSettingsStatus('スプレッドシート側（金額確認用）にまだ項目がありません', 'err');
+        }
       })
       .catch(function(err){
-        setSettingsStatus('在庫の取得に失敗：' + err.message, 'err');
+        setSettingsStatus('カタログの取得に失敗：' + err.message, 'err');
       });
   }
 
   function updateStockBadges(){
     PACKS.forEach(function(p){
-      var stock = stockMap[p.name];
       if(p.packPrice != null){
         var pEl = document.getElementById('stock-p:' + p.name);
-        if(pEl) pEl.textContent = stock && stock.packRemain != null ? ('残り' + stock.packRemain) : '';
+        if(pEl) pEl.textContent = (p.packRemain != null) ? ('残り' + p.packRemain) : '';
       }
       if(p.boxPrice != null){
         var bEl = document.getElementById('stock-b:' + p.name);
-        if(bEl) bEl.textContent = stock && stock.boxRemain != null ? ('残り' + stock.boxRemain) : '';
+        if(bEl) bEl.textContent = (p.boxRemain != null) ? ('残り' + p.boxRemain) : '';
       }
     });
   }
@@ -1030,16 +1075,19 @@
     return '¥' + n.toLocaleString('ja-JP');
   }
 
-  PACKS.forEach(function(p){
-    if(p.packPrice != null){
-      var pk = 'p:' + p.name;
-      if(typeof counts[pk] !== 'number' || counts[pk] < 0) counts[pk] = 0;
-    }
-    if(p.boxPrice != null){
-      var bk = 'b:' + p.name;
-      if(typeof counts[bk] !== 'number' || counts[bk] < 0) counts[bk] = 0;
-    }
-  });
+  function ensureCountsInitialized(){
+    PACKS.forEach(function(p){
+      if(p.packPrice != null){
+        var pk = 'p:' + p.name;
+        if(typeof counts[pk] !== 'number' || counts[pk] < 0) counts[pk] = 0;
+      }
+      if(p.boxPrice != null){
+        var bk = 'b:' + p.name;
+        if(typeof counts[bk] !== 'number' || counts[bk] < 0) counts[bk] = 0;
+      }
+    });
+  }
+  ensureCountsInitialized();
 
   function buildList(){
     var html = '';
