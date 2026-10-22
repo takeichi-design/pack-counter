@@ -1002,17 +1002,21 @@
   // 直前のキャッシュ（なければ BOOTSTRAP_PACKS）がそのまま使われ続ける。
   function applyCatalog(serverCatalog){
     if(!Array.isArray(serverCatalog) || serverCatalog.length === 0) return false;
-    var mapped = serverCatalog.map(function(row){
-      return {
-        name: row.name,
-        packPrice: row.packPrice,
-        boxPrice: row.boxPrice,
-        color: row.color || 'グレー',
-        category: row.category === 'overseas' ? 'overseas' : 'domestic',
-        packRemain: row.packRemain,
-        boxRemain: row.boxRemain
-      };
-    });
+    var mapped = serverCatalog
+      // 「金額確認用」タブでパック残り個数・BOX残り個数がどちらも未記入（空欄）の項目は、
+      // 実質トラッキングしていないアイテムとしてツールには表示しない。
+      .filter(function(row){ return row.packRemain != null || row.boxRemain != null; })
+      .map(function(row){
+        return {
+          name: row.name,
+          packPrice: row.packPrice,
+          boxPrice: row.boxPrice,
+          color: row.color || 'グレー',
+          category: row.category === 'overseas' ? 'overseas' : 'domestic',
+          packRemain: row.packRemain,
+          boxRemain: row.boxRemain
+        };
+      });
     // スプレッドシート上は新規アイテムが末尾に追加されるため、見出しが分裂しないよう
     // 国内→海外の順に安定ソートし直す（同じカテゴリ内の並び順は保たれる）。
     mapped.sort(function(a, b){
