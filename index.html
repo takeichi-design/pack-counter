@@ -12,6 +12,7 @@
     --muted:#6b7280;
     --border:#e5e7eb;
     --accent:#2563eb;
+    --accent-dark:#1d4ed8;
     --danger:#dc2626;
     --danger-dark:#b91c1c;
     --neutral:#4b5563;
@@ -24,7 +25,8 @@
     color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
     touch-action:manipulation;
-    padding-bottom:40px;
+    padding-top:58px;
+    padding-bottom:110px;
   }
   header{
     padding:16px 16px 6px;
@@ -45,13 +47,20 @@
     margin:0 auto;
     padding:0 10px;
   }
+  /* 検索窓は常に画面最上部に固定 */
   .search-wrap{
-    margin-top:10px;
-    position:sticky;
+    position:fixed;
     top:0;
+    left:0;
+    right:0;
     background:var(--bg);
-    padding:6px 0;
-    z-index:5;
+    padding:9px 10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+    z-index:50;
+  }
+  .search-wrap-inner{
+    max-width:640px;
+    margin:0 auto;
   }
   #searchInput{
     width:100%;
@@ -163,14 +172,15 @@
   .control-group.tap-flash{
     animation:tapFlash 0.35s ease;
   }
-  .summary{
+  section.summary, section.logs{
     margin-top:22px;
     background:var(--card-bg);
     border:1px solid var(--border);
     border-radius:14px;
     padding:14px 12px;
+    scroll-margin-top:68px;
   }
-  .summary h2{
+  .summary h2, .logs h2{
     margin:0 0 10px;
     font-size:1rem;
   }
@@ -208,7 +218,7 @@
     display:flex;
     gap:10px;
   }
-  .actions button{
+  .actions button, .log-actions button{
     flex:1;
     padding:13px 0;
     border-radius:12px;
@@ -233,8 +243,120 @@
     color:#9ca3af;
     cursor:not-allowed;
   }
-  .confirm-banner{
+  /* --- ログセクション --- */
+  #saveLogBtn{
+    width:100%;
+    padding:13px 0;
+    border-radius:12px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-size:0.92rem;
+    font-weight:700;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  #saveLogBtn:active{ background:var(--accent-dark); }
+  .log-actions{
+    display:flex;
+    gap:8px;
     margin-top:10px;
+  }
+  #resetLogsBtn{
+    background:#fee2e2;
+    color:var(--danger-dark);
+  }
+  #resetLogsBtn:active{ background:#fecaca; }
+  #exportJpegBtn{
+    background:#e5e7eb;
+    color:var(--text);
+  }
+  #exportJpegBtn:active{ background:#d1d5db; }
+  #exportJpegBtn:disabled, #resetLogsBtn:disabled{
+    background:#f1f5f9;
+    color:#b0b8c4;
+    cursor:not-allowed;
+  }
+  .log-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:12px;
+  }
+  .log-card{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 10px 8px;
+    background:#fafafa;
+  }
+  .log-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:4px;
+  }
+  .log-card-label{
+    font-weight:800;
+    font-size:0.85rem;
+    color:var(--accent);
+  }
+  .log-card-date{
+    font-size:0.65rem;
+    color:var(--muted);
+  }
+  .log-card table{
+    font-size:0.68rem;
+  }
+  .log-card-total{
+    text-align:right;
+    font-weight:800;
+    font-size:0.8rem;
+    color:var(--accent);
+    margin-top:4px;
+  }
+  .log-memo{
+    width:100%;
+    margin-top:6px;
+    padding:6px 8px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    font-size:0.78rem;
+    background:#fff;
+  }
+  /* --- 右下フローティングボタン --- */
+  .scroll-fabs{
+    position:fixed;
+    right:14px;
+    bottom:18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    z-index:60;
+  }
+  .fab{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    padding:10px 14px;
+    border-radius:999px;
+    border:none;
+    background:rgba(31,36,48,0.85);
+    color:#fff;
+    font-size:0.72rem;
+    font-weight:700;
+    box-shadow:0 3px 10px rgba(0,0,0,0.25);
+    cursor:pointer;
+    touch-action:manipulation;
+    white-space:nowrap;
+  }
+  .fab:active{ background:rgba(31,36,48,1); transform:scale(0.96); }
+  .fab .fab-icon{ font-size:0.95rem; line-height:1; }
+  /* --- 確認バナー(画面下部に固定で必ず見える位置に表示) --- */
+  .confirm-banner{
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:16px;
     background:#fef3c7;
     border:1px solid #f59e0b;
     color:#78350f;
@@ -245,9 +367,12 @@
     align-items:center;
     justify-content:space-between;
     gap:8px;
+    z-index:80;
+    box-shadow:0 4px 16px rgba(0,0,0,0.2);
   }
   .confirm-banner.show{display:flex;}
-  .confirm-banner .confirm-buttons{display:flex; gap:6px;}
+  .confirm-banner .confirm-buttons{display:flex; gap:6px; flex:0 0 auto;}
+  .confirm-banner span{flex:1 1 auto;}
   .confirm-banner button{
     border:none;
     border-radius:8px;
@@ -267,19 +392,21 @@
 </style>
 </head>
 <body>
+<div class="search-wrap">
+  <div class="search-wrap-inner">
+    <input id="searchInput" type="text" placeholder="パック名で検索…" autocomplete="off">
+  </div>
+</div>
+
 <div class="app">
   <header>
     <h1>パックカウンター</h1>
     <p>開けたパック／BOXの＋／－をタップして記録してください</p>
   </header>
 
-  <div class="search-wrap">
-    <input id="searchInput" type="text" placeholder="パック名で検索…" autocomplete="off">
-  </div>
-
   <div class="pack-list" id="packList"></div>
 
-  <section class="summary">
+  <section class="summary" id="summarySection">
     <h2>集計（1個以上カウントされた項目のみ）</h2>
     <div id="summaryEmpty" class="summary-empty">まだ何もカウントされていません</div>
     <table id="summaryTable" style="display:none">
@@ -308,19 +435,35 @@
   </section>
 
   <div class="actions">
-    <button id="resetBtn" type="button">リセット</button>
+    <button id="resetBtn" type="button">現カウントをリセット</button>
     <button id="undoBtn" type="button" disabled>訂正（元に戻す）</button>
   </div>
 
-  <div class="confirm-banner" id="confirmBanner">
-    <span>本当に全部リセットしますか？</span>
-    <div class="confirm-buttons">
-      <button type="button" class="confirm-no" id="confirmNo">やめる</button>
-      <button type="button" class="confirm-yes" id="confirmYes">リセットする</button>
+  <section class="logs" id="logsSection">
+    <h2>ログ</h2>
+    <button id="saveLogBtn" type="button">ログを残す</button>
+    <div class="log-actions">
+      <button id="resetLogsBtn" type="button" disabled>ログを全てリセット</button>
+      <button id="exportJpegBtn" type="button" disabled>ログをJPEGで保存</button>
     </div>
-  </div>
+    <div id="logsEmpty" class="summary-empty" style="margin-top:10px;">まだログはありません</div>
+    <div class="log-list" id="logList"></div>
+  </section>
 
   <footer>データはこの端末内に保存されます（他の端末とは共有されません）</footer>
+</div>
+
+<div class="scroll-fabs">
+  <button type="button" class="fab" id="scrollToSummaryBtn"><span class="fab-icon">📊</span>集計へ</button>
+  <button type="button" class="fab" id="scrollToTopBtn"><span class="fab-icon">⬆</span>上部へ</button>
+</div>
+
+<div class="confirm-banner" id="confirmBanner">
+  <span id="confirmMessage">本当に全部リセットしますか？</span>
+  <div class="confirm-buttons">
+    <button type="button" class="confirm-no" id="confirmNo">やめる</button>
+    <button type="button" class="confirm-yes" id="confirmYes">実行する</button>
+  </div>
 </div>
 
 <script>
@@ -420,31 +563,33 @@
   }
 
   var STORAGE_KEY = 'packCounterState_v3';
+  var LOGS_KEY = 'packCounterLogs_v1';
 
-  function loadCounts(){
+  function loadJSON(key, fallback){
     try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return {};
+      var raw = localStorage.getItem(key);
+      if(!raw) return fallback;
       var parsed = JSON.parse(raw);
-      return (parsed && typeof parsed === 'object') ? parsed : {};
+      return parsed == null ? fallback : parsed;
     }catch(e){
-      return {};
+      return fallback;
     }
   }
-
-  function saveCounts(){
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(counts));
-    }catch(e){ /* localStorage が使えない環境は無視 */ }
+  function saveJSON(key, value){
+    try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){ /* 保存できない環境は無視 */ }
   }
 
-  var counts = loadCounts();
+  var counts = loadJSON(STORAGE_KEY, {});
+  var logs = loadJSON(LOGS_KEY, []);
+  if(!Array.isArray(logs)) logs = [];
   var lastCountsBeforeReset = null;
+  var pendingAction = null; // 'resetCurrent' | 'resetLogs'
 
   var packListEl = document.getElementById('packList');
   var summaryBody = document.getElementById('summaryBody');
   var summaryTable = document.getElementById('summaryTable');
   var summaryEmpty = document.getElementById('summaryEmpty');
+  var summarySection = document.getElementById('summarySection');
   var grandPackCountEl = document.getElementById('grandPackCount');
   var grandPackMoneyEl = document.getElementById('grandPackMoney');
   var grandBoxCountEl = document.getElementById('grandBoxCount');
@@ -453,9 +598,17 @@
   var resetBtn = document.getElementById('resetBtn');
   var undoBtn = document.getElementById('undoBtn');
   var confirmBanner = document.getElementById('confirmBanner');
+  var confirmMessage = document.getElementById('confirmMessage');
   var confirmYes = document.getElementById('confirmYes');
   var confirmNo = document.getElementById('confirmNo');
   var searchInput = document.getElementById('searchInput');
+  var saveLogBtn = document.getElementById('saveLogBtn');
+  var resetLogsBtn = document.getElementById('resetLogsBtn');
+  var exportJpegBtn = document.getElementById('exportJpegBtn');
+  var logListEl = document.getElementById('logList');
+  var logsEmpty = document.getElementById('logsEmpty');
+  var scrollToSummaryBtn = document.getElementById('scrollToSummaryBtn');
+  var scrollToTopBtn = document.getElementById('scrollToTopBtn');
 
   function yen(n){
     return '¥' + n.toLocaleString('ja-JP');
@@ -535,13 +688,36 @@
     var next = (counts[key] || 0) + delta;
     if(next < 0) next = 0;
     counts[key] = next;
-    saveCounts();
+    saveJSON(STORAGE_KEY, counts);
     render();
+  }
+
+  // 現在の集計スナップショット(名称・パック数・BOX数・金額)を作る。
+  // render() のループと同じ計算を共有する。
+  function buildSnapshot(){
+    var items = [];
+    var gp = 0, gpMoney = 0, gb = 0, gbMoney = 0;
+    PACKS.forEach(function(p, i){
+      var pk = 'p' + i, bk = 'b' + i;
+      var pc = p.packPrice != null ? (counts[pk] || 0) : 0;
+      var bc = p.boxPrice != null ? (counts[bk] || 0) : 0;
+      if(pc === 0 && bc === 0) return;
+      var packSubtotal = pc * (p.packPrice || 0);
+      var boxSubtotal = bc * (p.boxPrice || 0);
+      gp += pc; gpMoney += packSubtotal; gb += bc; gbMoney += boxSubtotal;
+      items.push({
+        name:p.name,
+        pc:pc, packPrice:p.packPrice, packSubtotal:packSubtotal,
+        bc:bc, boxPrice:p.boxPrice, boxSubtotal:boxSubtotal,
+        rowTotal:packSubtotal + boxSubtotal
+      });
+    });
+    return { items:items, gpCount:gp, gpMoney:gpMoney, gbCount:gb, gbMoney:gbMoney, total:gpMoney + gbMoney };
   }
 
   function render(){
     var rows = '';
-    var grandPackCount = 0, grandPackMoney = 0, grandBoxCount = 0, grandBoxMoney = 0;
+    var snap = buildSnapshot();
 
     PACKS.forEach(function(p, i){
       var pk = 'p' + i, bk = 'b' + i;
@@ -558,25 +734,16 @@
       if(pkGroupEl) pkGroupEl.classList.toggle('has-count', pc > 0);
       var bkGroupEl = document.querySelector('.control-group[data-group="' + bk + '"]');
       if(bkGroupEl) bkGroupEl.classList.toggle('has-count', bc > 0);
+    });
 
-      if(pc === 0 && bc === 0) return; // 集計は1個以上カウントされた項目のみ
-
-      var packSubtotal = pc * (p.packPrice || 0);
-      var boxSubtotal = bc * (p.boxPrice || 0);
-      var rowTotal = packSubtotal + boxSubtotal;
-
-      grandPackCount += pc;
-      grandPackMoney += packSubtotal;
-      grandBoxCount += bc;
-      grandBoxMoney += boxSubtotal;
-
+    snap.items.forEach(function(item){
       rows += '<tr>' +
-        '<td>' + p.name + '</td>' +
-        '<td>' + (p.packPrice != null ? pc : '－') + '</td>' +
-        '<td>' + (p.packPrice != null ? yen(packSubtotal) : '－') + '</td>' +
-        '<td>' + (p.boxPrice != null ? bc : '－') + '</td>' +
-        '<td>' + (p.boxPrice != null ? yen(boxSubtotal) : '－') + '</td>' +
-        '<td>' + yen(rowTotal) + '</td>' +
+        '<td>' + item.name + '</td>' +
+        '<td>' + (item.packPrice != null ? item.pc : '－') + '</td>' +
+        '<td>' + (item.packPrice != null ? yen(item.packSubtotal) : '－') + '</td>' +
+        '<td>' + (item.boxPrice != null ? item.bc : '－') + '</td>' +
+        '<td>' + (item.boxPrice != null ? yen(item.boxSubtotal) : '－') + '</td>' +
+        '<td>' + yen(item.rowTotal) + '</td>' +
       '</tr>';
     });
 
@@ -589,11 +756,11 @@
       summaryBody.innerHTML = rows;
     }
 
-    grandPackCountEl.textContent = grandPackCount;
-    grandPackMoneyEl.textContent = yen(grandPackMoney);
-    grandBoxCountEl.textContent = grandBoxCount;
-    grandBoxMoneyEl.textContent = yen(grandBoxMoney);
-    grandTotalEl.textContent = yen(grandPackMoney + grandBoxMoney);
+    grandPackCountEl.textContent = snap.gpCount;
+    grandPackMoneyEl.textContent = yen(snap.gpMoney);
+    grandBoxCountEl.textContent = snap.gbCount;
+    grandBoxMoneyEl.textContent = yen(snap.gbMoney);
+    grandTotalEl.textContent = yen(snap.total);
   }
 
   // --- 検索フィルタ ---
@@ -605,35 +772,317 @@
     });
   });
 
-  // --- リセット / 訂正（元に戻す） ---
-  resetBtn.addEventListener('click', function(){
+  // --- 右下フローティングボタン ---
+  scrollToSummaryBtn.addEventListener('click', function(){
+    summarySection.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+  scrollToTopBtn.addEventListener('click', function(){
+    window.scrollTo({ top:0, behavior:'smooth' });
+  });
+
+  // --- 確認バナー(現カウントリセット / ログ全リセット 共通) ---
+  function openConfirm(action, message){
+    pendingAction = action;
+    confirmMessage.textContent = message;
     confirmBanner.classList.add('show');
-  });
-
+  }
   confirmNo.addEventListener('click', function(){
+    pendingAction = null;
+    confirmBanner.classList.remove('show');
+  });
+  confirmYes.addEventListener('click', function(){
+    if(pendingAction === 'resetCurrent'){
+      lastCountsBeforeReset = JSON.parse(JSON.stringify(counts));
+      Object.keys(counts).forEach(function(k){ counts[k] = 0; });
+      saveJSON(STORAGE_KEY, counts);
+      render();
+      undoBtn.disabled = false;
+    }else if(pendingAction === 'resetLogs'){
+      logs = [];
+      saveJSON(LOGS_KEY, logs);
+      renderLogs();
+    }
+    pendingAction = null;
     confirmBanner.classList.remove('show');
   });
 
-  confirmYes.addEventListener('click', function(){
-    lastCountsBeforeReset = JSON.parse(JSON.stringify(counts));
-    Object.keys(counts).forEach(function(k){ counts[k] = 0; });
-    saveCounts();
-    render();
-    undoBtn.disabled = false;
-    confirmBanner.classList.remove('show');
+  resetBtn.addEventListener('click', function(){
+    openConfirm('resetCurrent', '現在カウント中のものを全てリセットします。よろしいですか？（ログは残ります）');
   });
 
   undoBtn.addEventListener('click', function(){
     if(!lastCountsBeforeReset) return;
     counts = JSON.parse(JSON.stringify(lastCountsBeforeReset));
-    saveCounts();
+    saveJSON(STORAGE_KEY, counts);
     render();
     lastCountsBeforeReset = null;
     undoBtn.disabled = true;
   });
 
+  // --- ログ ---
+  function formatDateTime(iso){
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return '';
+    var mm = d.getMonth() + 1, dd = d.getDate();
+    var hh = ('0' + d.getHours()).slice(-2), mi = ('0' + d.getMinutes()).slice(-2);
+    return mm + '/' + dd + ' ' + hh + ':' + mi;
+  }
+
+  function renderLogs(){
+    if(logs.length === 0){
+      logsEmpty.style.display = 'block';
+      logListEl.innerHTML = '';
+      resetLogsBtn.disabled = true;
+      exportJpegBtn.disabled = true;
+      return;
+    }
+    logsEmpty.style.display = 'none';
+    resetLogsBtn.disabled = false;
+    exportJpegBtn.disabled = false;
+
+    var html = '';
+    logs.forEach(function(log){
+      var rows = '';
+      log.snapshot.items.forEach(function(item){
+        rows += '<tr>' +
+          '<td>' + item.name + '</td>' +
+          '<td>' + (item.packPrice != null ? item.pc : '－') + '</td>' +
+          '<td>' + (item.boxPrice != null ? item.bc : '－') + '</td>' +
+          '<td>' + yen(item.rowTotal) + '</td>' +
+        '</tr>';
+      });
+      if(rows === ''){
+        rows = '<tr><td colspan="4" style="color:#9ca3af;">（カウントなし）</td></tr>';
+      }
+      html +=
+        '<div class="log-card" data-log-id="' + log.id + '">' +
+          '<div class="log-card-head">' +
+            '<span class="log-card-label">' + log.label + '</span>' +
+            '<span class="log-card-date">' + formatDateTime(log.createdAt) + '</span>' +
+          '</div>' +
+          '<table><thead><tr><th>名称</th><th>パック</th><th>BOX</th><th>小計</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+          '<div class="log-card-total">合計 ' + yen(log.snapshot.total) + '</div>' +
+          '<input type="text" class="log-memo" data-log-id="' + log.id + '" maxlength="60" placeholder="メモ（1行）" value="' + (log.memo || '').replace(/"/g,'&quot;') + '">' +
+        '</div>';
+    });
+    logListEl.innerHTML = html;
+
+    logListEl.querySelectorAll('.log-memo').forEach(function(input){
+      input.addEventListener('input', function(){
+        var id = input.getAttribute('data-log-id');
+        var log = logs.find(function(l){ return l.id === id; });
+        if(log){
+          log.memo = input.value;
+          saveJSON(LOGS_KEY, logs);
+        }
+      });
+    });
+  }
+
+  saveLogBtn.addEventListener('click', function(){
+    var snap = buildSnapshot();
+    var log = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      label: (logs.length + 1) + '本目',
+      createdAt: new Date().toISOString(),
+      memo: '',
+      snapshot: snap
+    };
+    logs.push(log);
+    saveJSON(LOGS_KEY, logs);
+    renderLogs();
+  });
+
+  resetLogsBtn.addEventListener('click', function(){
+    if(logs.length === 0) return;
+    openConfirm('resetLogs', '保存した全てのログを削除します。よろしいですか？（現在のカウントは残ります）');
+  });
+
+  // --- ログをJPEG画像として書き出す ---
+  exportJpegBtn.addEventListener('click', function(){
+    if(logs.length === 0) return;
+    exportLogsAsJpeg();
+  });
+
+  function truncateToWidth(ctx, text, maxWidth){
+    if(ctx.measureText(text).width <= maxWidth) return text;
+    var t = text;
+    while(t.length > 1 && ctx.measureText(t + '…').width > maxWidth){
+      t = t.slice(0, -1);
+    }
+    return t + '…';
+  }
+
+  function exportLogsAsJpeg(){
+    var SCALE = 2;
+    var W = 900;
+    var padX = 24;
+    var cardPad = 14;
+    var lineH = 20;
+    var titleH = 50;
+    var cardGap = 16;
+    var font12 = '12px -apple-system,"Hiragino Kaku Gothic ProN",sans-serif';
+    var font13b = 'bold 13px -apple-system,"Hiragino Kaku Gothic ProN",sans-serif';
+    var font15b = 'bold 15px -apple-system,"Hiragino Kaku Gothic ProN",sans-serif';
+    var font20b = 'bold 20px -apple-system,"Hiragino Kaku Gothic ProN",sans-serif';
+
+    // 高さを事前計算
+    var measureCanvas = document.createElement('canvas');
+    var mctx = measureCanvas.getContext('2d');
+    var cardHeights = logs.map(function(log){
+      var itemCount = Math.max(log.snapshot.items.length, 1);
+      var h = cardPad + 20 /* head */ + itemCount * lineH + 24 /* total */ ;
+      if(log.memo){ h += lineH; }
+      h += cardPad;
+      return h;
+    });
+    var totalCardsHeight = cardHeights.reduce(function(a,b){ return a + b + cardGap; }, 0);
+    var grand = logs.reduce(function(acc, log){
+      acc.pack += log.snapshot.gpMoney;
+      acc.box += log.snapshot.gbMoney;
+      acc.total += log.snapshot.total;
+      return acc;
+    }, { pack:0, box:0, total:0 });
+
+    var H = titleH + 30 /* subtitle */ + totalCardsHeight + 50 /* grand total footer */ + padX;
+
+    var canvas = document.createElement('canvas');
+    canvas.width = W * SCALE;
+    canvas.height = H * SCALE;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(SCALE, SCALE);
+
+    // 背景
+    ctx.fillStyle = '#f5f6f8';
+    ctx.fillRect(0, 0, W, H);
+
+    var y = 26;
+    ctx.fillStyle = '#1f2430';
+    ctx.font = font20b;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('パックカウンター ログ', padX, y);
+
+    y += 20;
+    ctx.font = font12;
+    ctx.fillStyle = '#6b7280';
+    var now = new Date();
+    var exportedAt = now.getFullYear() + '/' + (now.getMonth()+1) + '/' + now.getDate() + ' ' +
+      ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2) + ' 書き出し';
+    ctx.fillText(exportedAt + '　全' + logs.length + '本', padX, y);
+
+    y += 24;
+
+    logs.forEach(function(log, idx){
+      var cardH = cardHeights[idx];
+      var cardW = W - padX * 2;
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
+      roundRect(ctx, padX, y, cardW, cardH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      var innerX = padX + cardPad;
+      var innerY = y + cardPad + 12;
+
+      ctx.font = font15b;
+      ctx.fillStyle = '#2563eb';
+      ctx.fillText(log.label, innerX, innerY);
+
+      ctx.font = font12;
+      ctx.fillStyle = '#9ca3af';
+      var dateText = formatDateTime(log.createdAt);
+      var dateW = ctx.measureText(dateText).width;
+      ctx.fillText(dateText, padX + cardW - cardPad - dateW, innerY);
+
+      innerY += lineH;
+
+      if(log.snapshot.items.length === 0){
+        ctx.font = font12;
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillText('（カウントなし）', innerX, innerY);
+        innerY += lineH;
+      }else{
+        log.snapshot.items.forEach(function(item){
+          ctx.font = font13b;
+          ctx.fillStyle = '#1f2430';
+          var nameMax = cardW - cardPad * 2 - 260;
+          ctx.fillText(truncateToWidth(ctx, item.name, nameMax), innerX, innerY);
+
+          var detailParts = [];
+          if(item.packPrice != null) detailParts.push('パック' + item.pc + '個 ' + yen(item.packSubtotal));
+          if(item.boxPrice != null) detailParts.push('BOX' + item.bc + '個 ' + yen(item.boxSubtotal));
+          var detailText = detailParts.join('　');
+          ctx.font = font12;
+          ctx.fillStyle = '#4b5563';
+          var detailW = ctx.measureText(detailText).width;
+          ctx.fillText(detailText, padX + cardW - cardPad - detailW, innerY);
+
+          innerY += lineH;
+        });
+      }
+
+      innerY += 4;
+      ctx.font = font15b;
+      ctx.fillStyle = '#2563eb';
+      var totalText = '合計 ' + yen(log.snapshot.total);
+      var totalW = ctx.measureText(totalText).width;
+      ctx.fillText(totalText, padX + cardW - cardPad - totalW, innerY);
+
+      if(log.memo){
+        innerY += lineH;
+        ctx.font = font12;
+        ctx.fillStyle = '#374151';
+        ctx.fillText('メモ：' + truncateToWidth(ctx, log.memo, cardW - cardPad * 2 - 40), innerX, innerY);
+      }
+
+      y += cardH + cardGap;
+    });
+
+    ctx.strokeStyle = '#d1d5db';
+    ctx.beginPath();
+    ctx.moveTo(padX, y);
+    ctx.lineTo(W - padX, y);
+    ctx.stroke();
+    y += 24;
+
+    ctx.font = font15b;
+    ctx.fillStyle = '#1f2430';
+    ctx.fillText('全ログ合計', padX, y);
+    ctx.font = font20b;
+    ctx.fillStyle = '#2563eb';
+    var grandText = yen(grand.total);
+    var grandW = ctx.measureText(grandText).width;
+    ctx.fillText(grandText, W - padX - grandW, y);
+
+    canvas.toBlob(function(blob){
+      if(!blob) return;
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      var ts = now.getFullYear() + ('0'+(now.getMonth()+1)).slice(-2) + ('0'+now.getDate()).slice(-2) + '-' +
+        ('0'+now.getHours()).slice(-2) + ('0'+now.getMinutes()).slice(-2);
+      a.href = url;
+      a.download = 'pack-counter-log-' + ts + '.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+    }, 'image/jpeg', 0.92);
+  }
+
+  function roundRect(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
   buildList();
   render();
+  renderLogs();
 })();
 </script>
 </body>
