@@ -114,6 +114,22 @@
   .pack-row.hidden{
     display:none;
   }
+  .pack-subheading{
+    margin:16px 2px 2px;
+    padding:6px 10px;
+    font-size:0.82rem;
+    font-weight:800;
+    color:#fff;
+    background:#334155;
+    border-radius:8px;
+    align-self:flex-start;
+  }
+  .pack-subheading:first-child{
+    margin-top:2px;
+  }
+  .pack-subheading.hidden{
+    display:none;
+  }
   .row-top{
     display:flex;
     align-items:baseline;
@@ -550,68 +566,76 @@
   // その種類のボタンを作りません。金額を直せば即反映されます。
   // B列・D列(パック金額・BOX金額)がどちらも未入力の項目は元データから除外済みです。
   // ------------------------------------------------------------------
+  var CATEGORY_LABELS = {
+    domestic: '🇯🇵国内パック',
+    overseas: '🇺🇸🇹🇼海外パック'
+  };
+
   var PACKS = [
-    { name:'シャイニースターV(プレ)', packPrice:null, boxPrice:14800, color:'黒' },
-    { name:'連撃マスター(プレ)', packPrice:580, boxPrice:null, color:'水色' },
-    { name:'白銀のランス(プレ)', packPrice:380, boxPrice:null, color:'ターコイズ' },
-    { name:'フュージョンアーツ(プレ)', packPrice:null, boxPrice:27800, color:'ピンク' },
-    { name:'タイムゲイザー(プレ)', packPrice:null, boxPrice:17800, color:'青' },
-    { name:'スペースジャグラー(プレ)', packPrice:300, boxPrice:null, color:'ピンク' },
-    { name:'Pokemon GO(安)', packPrice:null, boxPrice:6280, color:'青' },
-    { name:'VSTARユニバース(プレ)', packPrice:null, boxPrice:15800, color:'黄色' },
-    { name:'スカーレットex(安)', packPrice:null, boxPrice:4780, color:'オレンジ' },
-    { name:'バイオレットex', packPrice:null, boxPrice:5400, color:'青紫' },
-    { name:'クレイバースト(プレ)', packPrice:null, boxPrice:12800, color:'茶色' },
-    { name:'スノーハザード', packPrice:null, boxPrice:5400, color:'水色' },
-    { name:'黒炎の支配者(プレ)', packPrice:null, boxPrice:19800, color:'黒' },
-    { name:'未来の一閃', packPrice:180, boxPrice:5400, color:'青' },
-    { name:'古代の咆哮', packPrice:null, boxPrice:5400, color:'オレンジ' },
-    { name:'シャイニートレジャー', packPrice:550, boxPrice:null, color:'黒' },
-    { name:'サイバージャッジ', packPrice:null, boxPrice:5400, color:'ターコイズ' },
-    { name:'ワイルドフォース(安)', packPrice:null, boxPrice:4980, color:'黄色' },
-    { name:'クリムゾンヘイズ(プレ)', packPrice:null, boxPrice:15800, color:'赤' },
-    { name:'変幻の仮面(プレ)', packPrice:216, boxPrice:8980, color:'緑' },
-    { name:'ナイトワンダラー', packPrice:180, boxPrice:5400, color:'ピンク' },
-    { name:'ステラミラクル', packPrice:180, boxPrice:5400, color:'ターコイズ' },
-    { name:'楽園ドラゴーナ', packPrice:null, boxPrice:5400, color:'水色' },
-    { name:'超電ブレイカー', packPrice:null, boxPrice:5400, color:'黄色' },
-    { name:'超電ブレイカー(プレ)', packPrice:653, boxPrice:null, color:'黄色' },
-    { name:'テラスタルフェス', packPrice:550, boxPrice:null, color:'白' },
-    { name:'テラスタルフェス(プレ)', packPrice:null, boxPrice:21800, color:'白' },
-    { name:'バトルパートナーズ(プレ)', packPrice:400, boxPrice:null, color:'ターコイズ' },
-    { name:'熱風のアリーナ(プレ)', packPrice:null, boxPrice:22800, color:'オレンジ' },
-    { name:'ロケット団の栄光(プレ)', packPrice:498, boxPrice:28800, color:'赤' },
-    { name:'ブラックボルト(プレ)', packPrice:null, boxPrice:9980, color:'黒' },
-    { name:'ブラックボルト(デラックス)', packPrice:null, boxPrice:5800, color:'黒' },
-    { name:'ホワイトフレア', packPrice:290, boxPrice:null, color:'白' },
-    { name:'ホワイトフレア(プレ)', packPrice:null, boxPrice:8980, color:'白' },
-    { name:'ホワイトフレア(デラックス)', packPrice:null, boxPrice:5800, color:'白' },
-    { name:'メガブレイブ', packPrice:180, boxPrice:5400, color:'水色' },
-    { name:'メガブレイブ(プレ)', packPrice:394, boxPrice:11800, color:'青' },
-    { name:'メガシンフォニア', packPrice:180, boxPrice:5400, color:'赤紫' },
-    { name:'メガシンフォニア(プレ)', packPrice:417, boxPrice:8480, color:'ピンク' },
-    { name:'インフェルノX', packPrice:null, boxPrice:5400, color:'オレンジ' },
-    { name:'インフェルノX(プレ)', packPrice:293, boxPrice:null, color:'オレンジ' },
-    { name:'MEGAドリーム', packPrice:550, boxPrice:5500, color:'黒' },
-    { name:'MEGAドリーム(プレ)', packPrice:null, boxPrice:14800, color:'黒' },
-    { name:'ムニキスゼロ', packPrice:180, boxPrice:5400, color:'緑' },
-    { name:'ムニキスゼロ(安)', packPrice:164, boxPrice:null, color:'緑' },
-    { name:'ニンジャスピナー', packPrice:180, boxPrice:5400, color:'青' },
-    { name:'ニンジャスピナー(プレ)', packPrice:null, boxPrice:12400, color:'青' },
-    { name:'アビスアイ', packPrice:200, boxPrice:6000, color:'グレー' },
-    { name:'アビスアイ(プレ)', packPrice:null, boxPrice:11400, color:'グレー' },
-    { name:'アビスアイ(安)', packPrice:140, boxPrice:null, color:'グレー' },
-    { name:'ストームエメラルダ', packPrice:200, boxPrice:6000, color:'オレンジ' },
-    { name:'30周年セレブレーション', packPrice:360, boxPrice:7200, color:'黄色' },
-    { name:'中国テラスタル', packPrice:550, boxPrice:null, color:'ターコイズ' },
-    { name:'DESTINIED RIVALS', packPrice:931, boxPrice:null, color:'赤' },
-    { name:'TEMPORAL FORCES', packPrice:1100, boxPrice:null, color:'赤紫' },
-    { name:'PHANTASMAL FLAMES', packPrice:931, boxPrice:null, color:'オレンジ' },
-    { name:'MEGA EVOLUTION', packPrice:931, boxPrice:null, color:'青' },
-    { name:'SURGING SPARKS', packPrice:931, boxPrice:null, color:'黄色' },
-    { name:'JOURNEY TOGETHER', packPrice:931, boxPrice:null, color:'ターコイズ' },
-    { name:'PARADOX RIFT', packPrice:950, boxPrice:null, color:'水色' },
-    { name:'OBSIDIAN FLAMES', packPrice:950, boxPrice:null, color:'オレンジ' }
+    // --- 🇯🇵国内パック（シャイニースターV〜30周年セレブレーションを逆順に） ---
+    { name:'30周年セレブレーション', packPrice:360, boxPrice:7200, color:'黄色', category:'domestic' },
+    { name:'ストームエメラルダ', packPrice:200, boxPrice:6000, color:'オレンジ', category:'domestic' },
+    { name:'アビスアイ(安)', packPrice:140, boxPrice:null, color:'グレー', category:'domestic' },
+    { name:'アビスアイ(プレ)', packPrice:null, boxPrice:11400, color:'グレー', category:'domestic' },
+    { name:'アビスアイ', packPrice:200, boxPrice:6000, color:'グレー', category:'domestic' },
+    { name:'ニンジャスピナー(プレ)', packPrice:null, boxPrice:12400, color:'青', category:'domestic' },
+    { name:'ニンジャスピナー', packPrice:180, boxPrice:5400, color:'青', category:'domestic' },
+    { name:'ムニキスゼロ(安)', packPrice:164, boxPrice:null, color:'緑', category:'domestic' },
+    { name:'ムニキスゼロ', packPrice:180, boxPrice:5400, color:'緑', category:'domestic' },
+    { name:'MEGAドリーム(プレ)', packPrice:null, boxPrice:14800, color:'黒', category:'domestic' },
+    { name:'MEGAドリーム', packPrice:550, boxPrice:5500, color:'黒', category:'domestic' },
+    { name:'インフェルノX(プレ)', packPrice:293, boxPrice:null, color:'オレンジ', category:'domestic' },
+    { name:'インフェルノX', packPrice:null, boxPrice:5400, color:'オレンジ', category:'domestic' },
+    { name:'メガシンフォニア(プレ)', packPrice:417, boxPrice:8480, color:'ピンク', category:'domestic' },
+    { name:'メガシンフォニア', packPrice:180, boxPrice:5400, color:'赤紫', category:'domestic' },
+    { name:'メガブレイブ(プレ)', packPrice:394, boxPrice:11800, color:'青', category:'domestic' },
+    { name:'メガブレイブ', packPrice:180, boxPrice:5400, color:'水色', category:'domestic' },
+    { name:'ホワイトフレア(デラックス)', packPrice:null, boxPrice:5800, color:'白', category:'domestic' },
+    { name:'ホワイトフレア(プレ)', packPrice:null, boxPrice:8980, color:'白', category:'domestic' },
+    { name:'ホワイトフレア', packPrice:290, boxPrice:null, color:'白', category:'domestic' },
+    { name:'ブラックボルト(デラックス)', packPrice:null, boxPrice:5800, color:'黒', category:'domestic' },
+    { name:'ブラックボルト(プレ)', packPrice:null, boxPrice:9980, color:'黒', category:'domestic' },
+    { name:'ロケット団の栄光(プレ)', packPrice:498, boxPrice:28800, color:'赤', category:'domestic' },
+    { name:'熱風のアリーナ(プレ)', packPrice:null, boxPrice:22800, color:'オレンジ', category:'domestic' },
+    { name:'バトルパートナーズ(プレ)', packPrice:400, boxPrice:null, color:'ターコイズ', category:'domestic' },
+    { name:'テラスタルフェス(プレ)', packPrice:null, boxPrice:21800, color:'白', category:'domestic' },
+    { name:'テラスタルフェス', packPrice:550, boxPrice:null, color:'白', category:'domestic' },
+    { name:'超電ブレイカー(プレ)', packPrice:653, boxPrice:null, color:'黄色', category:'domestic' },
+    { name:'超電ブレイカー', packPrice:null, boxPrice:5400, color:'黄色', category:'domestic' },
+    { name:'楽園ドラゴーナ', packPrice:null, boxPrice:5400, color:'水色', category:'domestic' },
+    { name:'ステラミラクル', packPrice:180, boxPrice:5400, color:'ターコイズ', category:'domestic' },
+    { name:'ナイトワンダラー', packPrice:180, boxPrice:5400, color:'ピンク', category:'domestic' },
+    { name:'変幻の仮面(プレ)', packPrice:216, boxPrice:8980, color:'緑', category:'domestic' },
+    { name:'クリムゾンヘイズ(プレ)', packPrice:null, boxPrice:15800, color:'赤', category:'domestic' },
+    { name:'ワイルドフォース(安)', packPrice:null, boxPrice:4980, color:'黄色', category:'domestic' },
+    { name:'サイバージャッジ', packPrice:null, boxPrice:5400, color:'ターコイズ', category:'domestic' },
+    { name:'シャイニートレジャー', packPrice:550, boxPrice:null, color:'黒', category:'domestic' },
+    { name:'古代の咆哮', packPrice:null, boxPrice:5400, color:'オレンジ', category:'domestic' },
+    { name:'未来の一閃', packPrice:180, boxPrice:5400, color:'青', category:'domestic' },
+    { name:'黒炎の支配者(プレ)', packPrice:null, boxPrice:19800, color:'黒', category:'domestic' },
+    { name:'スノーハザード', packPrice:null, boxPrice:5400, color:'水色', category:'domestic' },
+    { name:'クレイバースト(プレ)', packPrice:null, boxPrice:12800, color:'茶色', category:'domestic' },
+    { name:'バイオレットex', packPrice:null, boxPrice:5400, color:'青紫', category:'domestic' },
+    { name:'スカーレットex(安)', packPrice:null, boxPrice:4780, color:'オレンジ', category:'domestic' },
+    { name:'VSTARユニバース(プレ)', packPrice:null, boxPrice:15800, color:'黄色', category:'domestic' },
+    { name:'Pokemon GO(安)', packPrice:null, boxPrice:6280, color:'青', category:'domestic' },
+    { name:'スペースジャグラー(プレ)', packPrice:300, boxPrice:null, color:'ピンク', category:'domestic' },
+    { name:'タイムゲイザー(プレ)', packPrice:null, boxPrice:17800, color:'青', category:'domestic' },
+    { name:'フュージョンアーツ(プレ)', packPrice:null, boxPrice:27800, color:'ピンク', category:'domestic' },
+    { name:'白銀のランス(プレ)', packPrice:380, boxPrice:null, color:'ターコイズ', category:'domestic' },
+    { name:'連撃マスター(プレ)', packPrice:580, boxPrice:null, color:'水色', category:'domestic' },
+    { name:'シャイニースターV(プレ)', packPrice:null, boxPrice:14800, color:'黒', category:'domestic' },
+
+    // --- 🇺🇸🇹🇼海外パック（中国テラスタル〜OBSIDIAN FLAMES） ---
+    { name:'中国テラスタル', packPrice:550, boxPrice:null, color:'ターコイズ', category:'overseas' },
+    { name:'DESTINIED RIVALS', packPrice:931, boxPrice:null, color:'赤', category:'overseas' },
+    { name:'TEMPORAL FORCES', packPrice:1100, boxPrice:null, color:'赤紫', category:'overseas' },
+    { name:'PHANTASMAL FLAMES', packPrice:931, boxPrice:null, color:'オレンジ', category:'overseas' },
+    { name:'MEGA EVOLUTION', packPrice:931, boxPrice:null, color:'青', category:'overseas' },
+    { name:'SURGING SPARKS', packPrice:931, boxPrice:null, color:'黄色', category:'overseas' },
+    { name:'JOURNEY TOGETHER', packPrice:931, boxPrice:null, color:'ターコイズ', category:'overseas' },
+    { name:'PARADOX RIFT', packPrice:950, boxPrice:null, color:'水色', category:'overseas' },
+    { name:'OBSIDIAN FLAMES', packPrice:950, boxPrice:null, color:'オレンジ', category:'overseas' }
   ];
 
   var COLOR_MAP = {
@@ -639,7 +663,7 @@
     return yiq >= 165 ? '#1f2430' : '#ffffff';
   }
 
-  var STORAGE_KEY = 'packCounterState_v3';
+  var STORAGE_KEY = 'packCounterState_v4'; // v4: 並び替えに影響されないよう名前ベースのキーに変更
   var LOGS_KEY = 'packCounterLogs_v1';
 
   function loadJSON(key, fallback){
@@ -693,20 +717,26 @@
     return '¥' + n.toLocaleString('ja-JP');
   }
 
-  PACKS.forEach(function(p, i){
+  PACKS.forEach(function(p){
     if(p.packPrice != null){
-      var pk = 'p' + i;
+      var pk = 'p:' + p.name;
       if(typeof counts[pk] !== 'number' || counts[pk] < 0) counts[pk] = 0;
     }
     if(p.boxPrice != null){
-      var bk = 'b' + i;
+      var bk = 'b:' + p.name;
       if(typeof counts[bk] !== 'number' || counts[bk] < 0) counts[bk] = 0;
     }
   });
 
   function buildList(){
     var html = '';
-    PACKS.forEach(function(p, i){
+    var lastCategory = null;
+    PACKS.forEach(function(p){
+      if(p.category && p.category !== lastCategory){
+        html += '<div class="pack-subheading">' + CATEGORY_LABELS[p.category] + '</div>';
+        lastCategory = p.category;
+      }
+
       var bg = COLOR_MAP[p.color] || '#94A3B8';
       var fg = textColorFor(bg);
       var priceLabel = [];
@@ -715,7 +745,7 @@
 
       var controls = '';
       if(p.packPrice != null){
-        var pk = 'p' + i;
+        var pk = 'p:' + p.name;
         controls +=
           '<div class="control-group" data-group="' + pk + '">' +
             '<span class="control-label">パック</span>' +
@@ -725,7 +755,7 @@
           '</div>';
       }
       if(p.boxPrice != null){
-        var bk = 'b' + i;
+        var bk = 'b:' + p.name;
         controls +=
           '<div class="control-group" data-group="' + bk + '">' +
             '<span class="control-label">BOX</span>' +
@@ -776,8 +806,8 @@
   function buildSnapshot(){
     var items = [];
     var gp = 0, gpMoney = 0, gb = 0, gbMoney = 0;
-    PACKS.forEach(function(p, i){
-      var pk = 'p' + i, bk = 'b' + i;
+    PACKS.forEach(function(p){
+      var pk = 'p:' + p.name, bk = 'b:' + p.name;
       var pc = p.packPrice != null ? (counts[pk] || 0) : 0;
       var bc = p.boxPrice != null ? (counts[bk] || 0) : 0;
       if(pc === 0 && bc === 0) return;
@@ -798,8 +828,8 @@
     var rows = '';
     var snap = buildSnapshot();
 
-    PACKS.forEach(function(p, i){
-      var pk = 'p' + i, bk = 'b' + i;
+    PACKS.forEach(function(p){
+      var pk = 'p:' + p.name, bk = 'b:' + p.name;
       var pc = p.packPrice != null ? (counts[pk] || 0) : 0;
       var bc = p.boxPrice != null ? (counts[bk] || 0) : 0;
 
@@ -845,10 +875,22 @@
   // --- 検索フィルタ ---
   searchInput.addEventListener('input', function(){
     var q = searchInput.value.trim().toLowerCase();
-    packListEl.querySelectorAll('.pack-row').forEach(function(row){
-      var match = !q || row.getAttribute('data-name').indexOf(q) !== -1;
-      row.classList.toggle('hidden', !match);
+    var currentHeading = null;
+    var headingHasVisibleRow = false;
+    Array.prototype.forEach.call(packListEl.children, function(el){
+      if(el.classList.contains('pack-subheading')){
+        if(currentHeading) currentHeading.classList.toggle('hidden', !headingHasVisibleRow);
+        currentHeading = el;
+        headingHasVisibleRow = false;
+        return;
+      }
+      if(el.classList.contains('pack-row')){
+        var match = !q || el.getAttribute('data-name').indexOf(q) !== -1;
+        el.classList.toggle('hidden', !match);
+        if(match) headingHasVisibleRow = true;
+      }
     });
+    if(currentHeading) currentHeading.classList.toggle('hidden', !headingHasVisibleRow);
   });
 
   // --- 右下フローティングボタン ---
