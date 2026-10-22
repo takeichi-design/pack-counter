@@ -476,12 +476,177 @@
     margin-top:22px;
     padding:0 16px;
   }
+  /* --- 現在カウント中の撮影チャンネル選択 --- */
+  .channel-select-wrap{
+    margin:10px 2px 0;
+    padding:10px 12px;
+    border-radius:12px;
+    background:#fff7e6;
+    border:2px solid #f59e0b;
+  }
+  .channel-select-label{
+    font-size:0.72rem;
+    font-weight:800;
+    color:#92400e;
+    margin-bottom:6px;
+  }
+  .channel-buttons{
+    display:flex;
+    gap:6px;
+  }
+  .channel-btn{
+    flex:1;
+    padding:9px 4px;
+    border-radius:9px;
+    border:2px solid #e5e7eb;
+    background:#fff;
+    color:var(--text);
+    font-size:0.78rem;
+    font-weight:700;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .channel-btn.active{
+    border-color:#f59e0b;
+    background:#f59e0b;
+    color:#fff;
+  }
+  .channel-badge{
+    display:inline-flex;
+    align-items:center;
+    margin-left:8px;
+    padding:4px 10px;
+    border-radius:999px;
+    background:#f59e0b;
+    color:#fff;
+    font-size:0.68rem;
+    font-weight:800;
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+  /* --- スプレッドシート連携設定 --- */
+  .settings-wrap{
+    margin:10px 2px 0;
+  }
+  .settings-toggle{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:0.72rem;
+    padding:4px 2px;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .settings-panel{
+    display:none;
+    margin-top:6px;
+    padding:10px 12px;
+    border-radius:10px;
+    background:#fff;
+    border:1px solid var(--border);
+  }
+  .settings-panel.show{ display:block; }
+  .settings-panel label{
+    display:block;
+    font-size:0.7rem;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  .settings-row{
+    display:flex;
+    gap:6px;
+  }
+  #appsScriptUrlInput{
+    flex:1;
+    padding:7px 9px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    font-size:0.75rem;
+  }
+  .settings-row button{
+    padding:7px 12px;
+    border-radius:8px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-size:0.75rem;
+    font-weight:700;
+    cursor:pointer;
+    touch-action:manipulation;
+    white-space:nowrap;
+  }
+  .settings-row button:active{ background:var(--accent-dark); }
+  .settings-status{
+    margin-top:6px;
+    font-size:0.68rem;
+    color:var(--muted);
+  }
+  .settings-status.err{ color:var(--danger); }
+  .settings-status.ok{ color:#16a34a; }
+  .stock-refresh-btn{
+    margin-top:6px;
+    background:#e5e7eb;
+    color:var(--text);
+    border:none;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:0.7rem;
+    font-weight:700;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .stock-refresh-btn:active{ background:#d1d5db; }
+  /* --- パック行の在庫残り表示 --- */
+  .stock-badge{
+    font-size:0.6rem;
+    font-weight:700;
+    opacity:0.85;
+    margin-left:2px;
+    white-space:nowrap;
+  }
+  /* --- ログカードの同期ステータス --- */
+  .sync-badge{
+    font-size:0.62rem;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:999px;
+    flex:0 0 auto;
+  }
+  .sync-badge.ok{ background:#dcfce7; color:#15803d; }
+  .sync-badge.err{ background:#fee2e2; color:var(--danger-dark); }
+  .sync-badge.pending{ background:#e5e7eb; color:#4b5563; }
+  .channel-tag{
+    font-size:0.62rem;
+    font-weight:800;
+    padding:2px 7px;
+    border-radius:999px;
+    flex:0 0 auto;
+    background:#fef3c7;
+    color:#92400e;
+  }
+  .log-retry-btn{
+    flex:0 0 auto;
+    border:1px solid #93c5fd;
+    background:#fff;
+    color:var(--accent);
+    font-size:0.62rem;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:999px;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .log-retry-btn:active{ background:#eff6ff; }
 </style>
 </head>
 <body>
 <div class="search-wrap">
-  <div class="search-wrap-inner">
-    <input id="searchInput" type="text" placeholder="パック名で検索…" autocomplete="off">
+  <div class="search-wrap-inner" style="display:flex; align-items:center;">
+    <input id="searchInput" type="text" placeholder="パック名で検索…" autocomplete="off" style="flex:1;">
+    <span class="channel-badge" id="channelBadge"></span>
   </div>
 </div>
 
@@ -490,6 +655,28 @@
     <h1>パックカウンター</h1>
     <p>開けたパック／BOXの＋／－をタップして記録してください</p>
   </header>
+
+  <div class="channel-select-wrap">
+    <div class="channel-select-label">📍 今カウントしているのはどの撮影？（ログを残す時にこれで振り分けます）</div>
+    <div class="channel-buttons">
+      <button type="button" class="channel-btn" id="channelBtnDomestic" data-channel="domestic">🇯🇵国内</button>
+      <button type="button" class="channel-btn" id="channelBtnWorld" data-channel="world">🇺🇸World</button>
+      <button type="button" class="channel-btn" id="channelBtnTaiwan" data-channel="taiwan">🇹🇼台湾</button>
+    </div>
+  </div>
+
+  <div class="settings-wrap">
+    <button type="button" class="settings-toggle" id="settingsToggleBtn">⚙️ スプレッドシート連携設定</button>
+    <div class="settings-panel" id="settingsPanel">
+      <label for="appsScriptUrlInput">Google Apps Script のWebアプリURL</label>
+      <div class="settings-row">
+        <input id="appsScriptUrlInput" type="text" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+        <button type="button" id="saveAppsScriptUrlBtn">保存</button>
+      </div>
+      <button type="button" class="stock-refresh-btn" id="refreshStockBtn">🔄 在庫を更新</button>
+      <div class="settings-status" id="settingsStatus"></div>
+    </div>
+  </div>
 
   <h2 class="zone-heading zone-heading-packs">パック／BOXの一覧</h2>
   <div class="pack-list" id="packList"></div>
@@ -586,8 +773,8 @@
     { name:'MEGAドリーム', packPrice:550, boxPrice:5500, color:'黒', category:'domestic' },
     { name:'インフェルノX(プレ)', packPrice:293, boxPrice:null, color:'オレンジ', category:'domestic' },
     { name:'インフェルノX', packPrice:null, boxPrice:5400, color:'オレンジ', category:'domestic' },
-    { name:'メガシンフォニア(プレ)', packPrice:417, boxPrice:8480, color:'ピンク', category:'domestic' },
-    { name:'メガシンフォニア', packPrice:180, boxPrice:5400, color:'赤紫', category:'domestic' },
+    { name:'メガシンフォニア(プレ)', packPrice:256, boxPrice:8480, color:'ピンク', category:'domestic' },
+    { name:'メガシンフォニア', packPrice:null, boxPrice:5400, color:'赤紫', category:'domestic' },
     { name:'メガブレイブ(プレ)', packPrice:394, boxPrice:11800, color:'青', category:'domestic' },
     { name:'メガブレイブ', packPrice:180, boxPrice:5400, color:'水色', category:'domestic' },
     { name:'ホワイトフレア(デラックス)', packPrice:null, boxPrice:5800, color:'白', category:'domestic' },
@@ -638,6 +825,9 @@
     { name:'OBSIDIAN FLAMES', packPrice:950, boxPrice:null, color:'オレンジ', category:'overseas' }
   ];
 
+  var PACKS_BY_NAME = {};
+  PACKS.forEach(function(p){ PACKS_BY_NAME[p.name] = p; });
+
   var COLOR_MAP = {
     '黒':'#262626',
     '水色':'#38BDF8',
@@ -665,6 +855,9 @@
 
   var STORAGE_KEY = 'packCounterState_v4'; // v4: 並び替えに影響されないよう名前ベースのキーに変更
   var LOGS_KEY = 'packCounterLogs_v1';
+  var APPS_SCRIPT_URL_KEY = 'packCounterAppsScriptUrl';
+  var CHANNEL_KEY = 'packCounterChannel';
+  var CHANNEL_LABELS = { domestic: '🇯🇵国内', world: '🇺🇸World', taiwan: '🇹🇼台湾' };
 
   function loadJSON(key, fallback){
     try{
@@ -712,6 +905,126 @@
   var logsEmpty = document.getElementById('logsEmpty');
   var scrollToSummaryBtn = document.getElementById('scrollToSummaryBtn');
   var scrollToTopBtn = document.getElementById('scrollToTopBtn');
+  var channelBtns = document.querySelectorAll('.channel-btn');
+  var channelBadge = document.getElementById('channelBadge');
+  var settingsToggleBtn = document.getElementById('settingsToggleBtn');
+  var settingsPanel = document.getElementById('settingsPanel');
+  var appsScriptUrlInput = document.getElementById('appsScriptUrlInput');
+  var saveAppsScriptUrlBtn = document.getElementById('saveAppsScriptUrlBtn');
+  var refreshStockBtn = document.getElementById('refreshStockBtn');
+  var settingsStatus = document.getElementById('settingsStatus');
+
+  // --- 現在カウント中の撮影チャンネル（🇯🇵国内／🇺🇸World／🇹🇼台湾）---
+  // パックは3つの撮影で共用のため、どの消費メモシートに書き込むかはパックの種類ではなく
+  // このチャンネル選択だけで決める。ログ1本ごとではなく、選んだ状態がずっと使われる。
+  var currentChannel = loadJSON(CHANNEL_KEY, 'domestic');
+  if(!CHANNEL_LABELS[currentChannel]) currentChannel = 'domestic';
+
+  function renderChannelUI(){
+    channelBtns.forEach(function(btn){
+      btn.classList.toggle('active', btn.getAttribute('data-channel') === currentChannel);
+    });
+    channelBadge.textContent = CHANNEL_LABELS[currentChannel];
+  }
+  channelBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      currentChannel = btn.getAttribute('data-channel');
+      saveJSON(CHANNEL_KEY, currentChannel);
+      renderChannelUI();
+    });
+  });
+  renderChannelUI();
+
+  // --- スプレッドシート連携：設定の読み込み ---
+  var appsScriptUrl = loadJSON(APPS_SCRIPT_URL_KEY, '');
+  if(typeof appsScriptUrl !== 'string') appsScriptUrl = '';
+  appsScriptUrlInput.value = appsScriptUrl;
+
+  var stockMap = {}; // name -> { packRemain, boxRemain }
+
+  function setSettingsStatus(text, kind){
+    settingsStatus.textContent = text;
+    settingsStatus.classList.remove('ok','err');
+    if(kind) settingsStatus.classList.add(kind);
+  }
+
+  settingsToggleBtn.addEventListener('click', function(){
+    settingsPanel.classList.toggle('show');
+  });
+
+  saveAppsScriptUrlBtn.addEventListener('click', function(){
+    appsScriptUrl = appsScriptUrlInput.value.trim();
+    saveJSON(APPS_SCRIPT_URL_KEY, appsScriptUrl);
+    if(appsScriptUrl){
+      setSettingsStatus('保存しました。在庫を取得します…', null);
+      fetchStock();
+    }else{
+      setSettingsStatus('URLを削除しました（連携オフ）', null);
+    }
+  });
+
+  refreshStockBtn.addEventListener('click', function(){
+    fetchStock();
+  });
+
+  // --- Apps Script Web App 呼び出し共通ヘルパー ---
+  // プリフライト(OPTIONS)を避けるため text/plain で送る。本文はJSON文字列。
+  function callAppsScript(payload){
+    if(!appsScriptUrl){
+      return Promise.reject(new Error('Apps ScriptのURLが設定されていません'));
+    }
+    return fetch(appsScriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(json){
+      if(!json || json.ok !== true) throw new Error((json && json.error) || '不明なエラー');
+      return json;
+    });
+  }
+
+  function fetchStock(){
+    if(!appsScriptUrl){
+      setSettingsStatus('URLが未設定のため在庫は取得できません', 'err');
+      return Promise.resolve();
+    }
+    setSettingsStatus('在庫を取得中…', null);
+    return fetch(appsScriptUrl, { method: 'GET' })
+      .then(function(res){
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(json){
+        if(!json || json.ok !== true) throw new Error((json && json.error) || '不明なエラー');
+        stockMap = {};
+        (json.stock || []).forEach(function(row){
+          stockMap[row.name] = { packRemain: row.packRemain, boxRemain: row.boxRemain };
+        });
+        updateStockBadges();
+        var now = new Date();
+        setSettingsStatus('在庫を更新しました（' + ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2) + '）', 'ok');
+      })
+      .catch(function(err){
+        setSettingsStatus('在庫の取得に失敗：' + err.message, 'err');
+      });
+  }
+
+  function updateStockBadges(){
+    PACKS.forEach(function(p){
+      var stock = stockMap[p.name];
+      if(p.packPrice != null){
+        var pEl = document.getElementById('stock-p:' + p.name);
+        if(pEl) pEl.textContent = stock && stock.packRemain != null ? ('残り' + stock.packRemain) : '';
+      }
+      if(p.boxPrice != null){
+        var bEl = document.getElementById('stock-b:' + p.name);
+        if(bEl) bEl.textContent = stock && stock.boxRemain != null ? ('残り' + stock.boxRemain) : '';
+      }
+    });
+  }
 
   function yen(n){
     return '¥' + n.toLocaleString('ja-JP');
@@ -752,6 +1065,7 @@
             '<button type="button" class="ctrl-btn minus" data-key="' + pk + '" aria-label="' + p.name + ' パックを1減らす">－</button>' +
             '<span class="count" id="count-' + pk + '">0</span>' +
             '<button type="button" class="ctrl-btn plus" data-key="' + pk + '" aria-label="' + p.name + ' パックを1増やす">＋</button>' +
+            '<span class="stock-badge" id="stock-' + pk + '"></span>' +
           '</div>';
       }
       if(p.boxPrice != null){
@@ -762,6 +1076,7 @@
             '<button type="button" class="ctrl-btn minus" data-key="' + bk + '" aria-label="' + p.name + ' BOXを1減らす">－</button>' +
             '<span class="count" id="count-' + bk + '">0</span>' +
             '<button type="button" class="ctrl-btn plus" data-key="' + bk + '" aria-label="' + p.name + ' BOXを1増やす">＋</button>' +
+            '<span class="stock-badge" id="stock-' + bk + '"></span>' +
           '</div>';
       }
 
@@ -822,6 +1137,24 @@
       });
     });
     return { items:items, gpCount:gp, gpMoney:gpMoney, gbCount:gb, gbMoney:gbMoney, total:gpMoney + gbMoney };
+  }
+
+  // スナップショットの各項目を、スプレッドシートに書き込む行（パック行・BOX行）に分解する。
+  // 書き込み先は、パックの種類に関係なく「現在選択中の撮影チャンネル」で統一する
+  // （パックは3撮影で共用のため、どのパックかではなく今どの撮影中かで決まる）。
+  function buildSheetItems(snap){
+    var rows = [];
+    var dest = currentChannel;
+    snap.items.forEach(function(item){
+      if(item.pc > 0) rows.push({ dest:dest, name:item.name, type:'パック', qty:item.pc });
+      if(item.bc > 0) rows.push({ dest:dest, name:item.name, type:'BOX', qty:item.bc });
+    });
+    return rows;
+  }
+
+  function todayForSheet(){
+    var d = new Date();
+    return (d.getMonth() + 1) + '/' + d.getDate();
   }
 
   function render(){
@@ -923,12 +1256,21 @@
       saveJSON(LOGS_KEY, logs);
       renderLogs();
     }else if(pendingAction === 'deleteLog'){
+      var deletedLog = logs.find(function(l){ return l.id === pendingDeleteLogId; });
       logs = logs.filter(function(l){ return l.id !== pendingDeleteLogId; });
       // 削除後も「1本目」「2本目」…の通し番号が詰まって見えるよう振り直す
       logs.forEach(function(l, idx){ l.label = (idx + 1) + '本目'; });
       saveJSON(LOGS_KEY, logs);
       renderLogs();
       pendingDeleteLogId = null;
+      // スプレッドシートに反映済みのログだった場合は、該当行の削除も試みる（ベストエフォート）
+      if(deletedLog && deletedLog.synced === true){
+        callAppsScript({ action:'deleteLog', logId: deletedLog.id })
+          .then(function(){ fetchStock(); })
+          .catch(function(err){
+            setSettingsStatus('スプレッドシート側の行削除に失敗：' + err.message + '（手動で確認してください）', 'err');
+          });
+      }
     }
     pendingAction = null;
     confirmBanner.classList.remove('show');
@@ -982,10 +1324,27 @@
       if(rows === ''){
         rows = '<tr><td colspan="4" style="color:#9ca3af;">（カウントなし）</td></tr>';
       }
+
+      var syncBadge = '';
+      if(log.synced === true){
+        syncBadge = '<span class="sync-badge ok">✅反映済</span>';
+      }else if(log.synced === 'pending'){
+        syncBadge = '<span class="sync-badge pending">送信中…</span>';
+      }else if(log.synced === false){
+        syncBadge = '<span class="sync-badge err" title="' + (log.syncError || '').replace(/"/g,'&quot;') + '">⚠️未反映</span>' +
+          '<button type="button" class="log-retry-btn" data-log-id="' + log.id + '">再送信</button>';
+      }
+
+      var channelTag = log.channel && CHANNEL_LABELS[log.channel]
+        ? '<span class="channel-tag">' + CHANNEL_LABELS[log.channel] + '</span>'
+        : '';
+
       html +=
         '<div class="log-card" data-log-id="' + log.id + '">' +
           '<div class="log-card-head">' +
             '<span class="log-card-label">' + log.label + '</span>' +
+            channelTag +
+            syncBadge +
             '<span class="log-card-date">' + formatDateTime(log.createdAt) + '</span>' +
             '<button type="button" class="log-delete-btn" data-log-id="' + log.id + '" aria-label="' + log.label + 'を削除">削除</button>' +
           '</div>' +
@@ -1015,6 +1374,43 @@
         openConfirm('deleteLog', (log ? log.label : 'このログ') + 'を削除します。よろしいですか？');
       });
     });
+
+    logListEl.querySelectorAll('.log-retry-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-log-id');
+        var log = logs.find(function(l){ return l.id === id; });
+        if(log) syncLogToSheet(log);
+      });
+    });
+  }
+
+  // ログをスプレッドシートへ送信する。成功/失敗どちらでも log.synced を更新し再描画する。
+  function syncLogToSheet(log){
+    if(log.sheetItems.length === 0){
+      // 消費メモに書き込む対象（パック/BOX）が無いログは連携対象外として扱う
+      log.synced = null;
+      log.syncError = null;
+      saveJSON(LOGS_KEY, logs);
+      renderLogs();
+      return;
+    }
+    log.synced = 'pending';
+    saveJSON(LOGS_KEY, logs);
+    renderLogs();
+    callAppsScript({ action:'log', logId: log.id, date: log.sheetDate, items: log.sheetItems })
+      .then(function(){
+        log.synced = true;
+        log.syncError = null;
+        saveJSON(LOGS_KEY, logs);
+        renderLogs();
+        fetchStock();
+      })
+      .catch(function(err){
+        log.synced = false;
+        log.syncError = err.message;
+        saveJSON(LOGS_KEY, logs);
+        renderLogs();
+      });
   }
 
   function saveLog(resetAfter){
@@ -1024,11 +1420,17 @@
       label: (logs.length + 1) + '本目',
       createdAt: new Date().toISOString(),
       memo: '',
-      snapshot: snap
+      snapshot: snap,
+      channel: currentChannel,
+      sheetItems: buildSheetItems(snap),
+      sheetDate: todayForSheet(),
+      synced: null, // null:対象外 / 'pending':送信中 / true:成功 / false:失敗
+      syncError: null
     };
     logs.push(log);
     saveJSON(LOGS_KEY, logs);
     renderLogs();
+    syncLogToSheet(log);
 
     if(resetAfter){
       // 集計は既にログへ保存済みなので確認なしでリセットするが、
@@ -1234,6 +1636,8 @@
   buildList();
   render();
   renderLogs();
+  updateStockBadges();
+  if(appsScriptUrl) fetchStock();
 })();
 </script>
 </body>
