@@ -1146,8 +1146,8 @@
     var rows = [];
     var dest = currentChannel;
     snap.items.forEach(function(item){
-      if(item.pc > 0) rows.push({ dest:dest, name:item.name, type:'パック', qty:item.pc });
-      if(item.bc > 0) rows.push({ dest:dest, name:item.name, type:'BOX', qty:item.bc });
+      if(item.pc > 0) rows.push({ dest:dest, name:item.name, type:'パック', qty:item.pc, amount:item.packSubtotal });
+      if(item.bc > 0) rows.push({ dest:dest, name:item.name, type:'BOX', qty:item.bc, amount:item.boxSubtotal });
     });
     return rows;
   }
