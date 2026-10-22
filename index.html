@@ -244,19 +244,26 @@
     cursor:not-allowed;
   }
   /* --- ログセクション --- */
-  #saveLogBtn{
-    width:100%;
-    padding:13px 0;
+  .save-log-row{
+    display:flex;
+    gap:8px;
+  }
+  .save-log-row button{
+    flex:1;
+    padding:12px 6px;
     border-radius:12px;
     border:none;
-    background:var(--accent);
     color:#fff;
-    font-size:0.92rem;
+    font-size:0.78rem;
     font-weight:700;
+    line-height:1.35;
     cursor:pointer;
     touch-action:manipulation;
   }
-  #saveLogBtn:active{ background:var(--accent-dark); }
+  #saveLogKeepBtn{ background:var(--accent); }
+  #saveLogKeepBtn:active{ background:var(--accent-dark); }
+  #saveLogResetBtn{ background:#16a34a; }
+  #saveLogResetBtn:active{ background:#15803d; }
   .log-actions{
     display:flex;
     gap:8px;
@@ -291,8 +298,8 @@
   }
   .log-card-head{
     display:flex;
-    justify-content:space-between;
-    align-items:baseline;
+    align-items:center;
+    gap:8px;
     margin-bottom:4px;
   }
   .log-card-label{
@@ -303,7 +310,22 @@
   .log-card-date{
     font-size:0.65rem;
     color:var(--muted);
+    flex:1;
+    text-align:right;
   }
+  .log-delete-btn{
+    flex:0 0 auto;
+    border:1px solid #fca5a5;
+    background:#fff;
+    color:var(--danger);
+    font-size:0.62rem;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:999px;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .log-delete-btn:active{ background:#fee2e2; }
   .log-card table{
     font-size:0.68rem;
   }
@@ -441,7 +463,10 @@
 
   <section class="logs" id="logsSection">
     <h2>ログ</h2>
-    <button id="saveLogBtn" type="button">ログを残す</button>
+    <div class="save-log-row">
+      <button id="saveLogKeepBtn" type="button">ログを残す<br>（現集計を残したまま）</button>
+      <button id="saveLogResetBtn" type="button">ログを残す<br>（現集計をリセット）</button>
+    </div>
     <div class="log-actions">
       <button id="resetLogsBtn" type="button" disabled>ログを全てリセット</button>
       <button id="exportJpegBtn" type="button" disabled>ログをJPEGで保存</button>
@@ -454,8 +479,8 @@
 </div>
 
 <div class="scroll-fabs">
-  <button type="button" class="fab" id="scrollToSummaryBtn"><span class="fab-icon">📊</span>集計へ</button>
   <button type="button" class="fab" id="scrollToTopBtn"><span class="fab-icon">⬆</span>上部へ</button>
+  <button type="button" class="fab" id="scrollToSummaryBtn"><span class="fab-icon">📊</span>集計へ</button>
 </div>
 
 <div class="confirm-banner" id="confirmBanner">
@@ -583,7 +608,8 @@
   var logs = loadJSON(LOGS_KEY, []);
   if(!Array.isArray(logs)) logs = [];
   var lastCountsBeforeReset = null;
-  var pendingAction = null; // 'resetCurrent' | 'resetLogs'
+  var pendingAction = null; // 'resetCurrent' | 'resetLogs' | 'deleteLog'
+  var pendingDeleteLogId = null;
 
   var packListEl = document.getElementById('packList');
   var summaryBody = document.getElementById('summaryBody');
@@ -602,7 +628,8 @@
   var confirmYes = document.getElementById('confirmYes');
   var confirmNo = document.getElementById('confirmNo');
   var searchInput = document.getElementById('searchInput');
-  var saveLogBtn = document.getElementById('saveLogBtn');
+  var saveLogKeepBtn = document.getElementById('saveLogKeepBtn');
+  var saveLogResetBtn = document.getElementById('saveLogResetBtn');
   var resetLogsBtn = document.getElementById('resetLogsBtn');
   var exportJpegBtn = document.getElementById('exportJpegBtn');
   var logListEl = document.getElementById('logList');
@@ -801,6 +828,13 @@
       logs = [];
       saveJSON(LOGS_KEY, logs);
       renderLogs();
+    }else if(pendingAction === 'deleteLog'){
+      logs = logs.filter(function(l){ return l.id !== pendingDeleteLogId; });
+      // 削除後も「1本目」「2本目」…の通し番号が詰まって見えるよう振り直す
+      logs.forEach(function(l, idx){ l.label = (idx + 1) + '本目'; });
+      saveJSON(LOGS_KEY, logs);
+      renderLogs();
+      pendingDeleteLogId = null;
     }
     pendingAction = null;
     confirmBanner.classList.remove('show');
@@ -859,6 +893,7 @@
           '<div class="log-card-head">' +
             '<span class="log-card-label">' + log.label + '</span>' +
             '<span class="log-card-date">' + formatDateTime(log.createdAt) + '</span>' +
+            '<button type="button" class="log-delete-btn" data-log-id="' + log.id + '" aria-label="' + log.label + 'を削除">削除</button>' +
           '</div>' +
           '<table><thead><tr><th>名称</th><th>パック</th><th>BOX</th><th>小計</th></tr></thead><tbody>' + rows + '</tbody></table>' +
           '<div class="log-card-total">合計 ' + yen(log.snapshot.total) + '</div>' +
@@ -877,9 +912,18 @@
         }
       });
     });
+
+    logListEl.querySelectorAll('.log-delete-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-log-id');
+        var log = logs.find(function(l){ return l.id === id; });
+        pendingDeleteLogId = id;
+        openConfirm('deleteLog', (log ? log.label : 'このログ') + 'を削除します。よろしいですか？');
+      });
+    });
   }
 
-  saveLogBtn.addEventListener('click', function(){
+  function saveLog(resetAfter){
     var snap = buildSnapshot();
     var log = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
@@ -891,7 +935,20 @@
     logs.push(log);
     saveJSON(LOGS_KEY, logs);
     renderLogs();
-  });
+
+    if(resetAfter){
+      // 集計は既にログへ保存済みなので確認なしでリセットするが、
+      // 誤操作に備えて既存の「訂正（元に戻す）」で元のカウントに戻せるようにしておく。
+      lastCountsBeforeReset = JSON.parse(JSON.stringify(counts));
+      Object.keys(counts).forEach(function(k){ counts[k] = 0; });
+      saveJSON(STORAGE_KEY, counts);
+      render();
+      undoBtn.disabled = false;
+    }
+  }
+
+  saveLogKeepBtn.addEventListener('click', function(){ saveLog(false); });
+  saveLogResetBtn.addEventListener('click', function(){ saveLog(true); });
 
   resetLogsBtn.addEventListener('click', function(){
     if(logs.length === 0) return;
