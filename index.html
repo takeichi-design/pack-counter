@@ -681,6 +681,7 @@
       <button type="button" class="channel-btn" id="channelBtnDomestic" data-channel="domestic">🇯🇵国内</button>
       <button type="button" class="channel-btn" id="channelBtnWorld" data-channel="world">🇺🇸World</button>
       <button type="button" class="channel-btn" id="channelBtnTaiwan" data-channel="taiwan">🇹🇼台湾</button>
+      <button type="button" class="channel-btn" id="channelBtnHongkong" data-channel="hongkong">🇭🇰香港</button>
     </div>
   </div>
 
@@ -774,7 +775,7 @@
   // ------------------------------------------------------------------
   var CATEGORY_LABELS = {
     domestic: '🇯🇵国内パック',
-    overseas: '🇺🇸🇹🇼海外パック'
+    overseas: '🇺🇸🇹🇼🇭🇰海外パック'
   };
 
   // BOOTSTRAP_PACKS は「スプレッドシートから一度もカタログを取得できていない時」専用の初期値。
@@ -889,7 +890,7 @@
   var LOGS_KEY = 'packCounterLogs_v1';
   var APPS_SCRIPT_URL_KEY = 'packCounterAppsScriptUrl';
   var CHANNEL_KEY = 'packCounterChannel';
-  var CHANNEL_LABELS = { domestic: '🇯🇵国内', world: '🇺🇸World', taiwan: '🇹🇼台湾' };
+  var CHANNEL_LABELS = { domestic: '🇯🇵国内', world: '🇺🇸World', taiwan: '🇹🇼台湾', hongkong: '🇭🇰香港' };
 
   function loadJSON(key, fallback){
     try{
@@ -947,8 +948,8 @@
   var settingsStatus = document.getElementById('settingsStatus');
   var syncStatusBadge = document.getElementById('syncStatusBadge');
 
-  // --- 現在カウント中の撮影チャンネル（🇯🇵国内／🇺🇸World／🇹🇼台湾）---
-  // パックは3つの撮影で共用のため、どの消費メモシートに書き込むかはパックの種類ではなく
+  // --- 現在カウント中の撮影チャンネル（🇯🇵国内／🇺🇸World／🇹🇼台湾／🇭🇰香港）---
+  // パックは4つの撮影で共用のため、どの消費メモシートに書き込むかはパックの種類ではなく
   // このチャンネル選択だけで決める。ログ1本ごとではなく、選んだ状態がずっと使われる。
   var currentChannel = loadJSON(CHANNEL_KEY, 'domestic');
   if(!CHANNEL_LABELS[currentChannel]) currentChannel = 'domestic';
@@ -1253,7 +1254,7 @@
 
   // スナップショットの各項目を、スプレッドシートに書き込む行（パック行・BOX行）に分解する。
   // 書き込み先は、パックの種類に関係なく「現在選択中の撮影チャンネル」で統一する
-  // （パックは3撮影で共用のため、どのパックかではなく今どの撮影中かで決まる）。
+  // （パックは4撮影で共用のため、どのパックかではなく今どの撮影中かで決まる）。
   function buildSheetItems(snap){
     var rows = [];
     var dest = currentChannel;
