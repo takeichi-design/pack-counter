@@ -778,6 +778,122 @@
     overseas: '🇺🇸🇹🇼🇭🇰海外パック'
   };
 
+  // ------------------------------------------------------------------
+  // 発売日ベースの並び替え（2026-11 追加）
+  //
+  // 国内パック／海外パックは、それぞれカテゴリ内で「発売日が新しいものから順に上から」
+  // 並ぶようにする。(プレ)(安)(デラックス) のような同じ製品の価格帯バリエーションは
+  // 同じ発売日として扱い、同日内では「無印 → (プレ) → (デラックス) → (安)」の順にまとめる。
+  //
+  // RELEASE_DATES はツールには一切表示しない、並び替え専用の内部データ。
+  // キーは「無印の製品名」（(プレ)(安)(デラックス) を取り除いた名前）。
+  // ここに載っていない名前（スプレッドシート側で新しく増えた、まだ発売日が分かっていない
+  // アイテム）は、そのカテゴリの一番上に表示する（＝気づいて発売日を追記しやすくする）。
+  var RELEASE_DATES = {
+    // --- 🇯🇵国内 ---
+    'シャイニースターV': '2020-11-20',
+    '連撃マスター': '2021-01-22',
+    '白銀のランス': '2021-04-23',
+    'フュージョンアーツ': '2021-09-24',
+    'VMAXクライマックス': '2021-12-03',
+    'タイムゲイザー': '2022-04-08',
+    'スペースジャグラー': '2022-04-08',
+    'Pokemon GO': '2022-06-17',
+    'VSTARユニバース': '2022-12-02',
+    'スカーレットex': '2023-01-20',
+    'バイオレットex': '2023-01-20',
+    'スノーハザード': '2023-04-14',
+    'クレイバースト': '2023-04-14',
+    '黒炎の支配者': '2023-07-28',
+    '古代の咆哮': '2023-10-27',
+    '未来の一閃': '2023-10-27',
+    'シャイニートレジャー': '2023-12-01',
+    'ワイルドフォース': '2024-01-26',
+    'サイバージャッジ': '2024-01-26',
+    'クリムゾンヘイズ': '2024-03-22',
+    '変幻の仮面': '2024-04-26',
+    'ナイトワンダラー': '2024-06-07',
+    'ステラミラクル': '2024-07-19',
+    '楽園ドラゴーナ': '2024-09-13',
+    '超電ブレイカー': '2024-10-18',
+    'テラスタルフェス': '2024-12-06',
+    'バトルパートナーズ': '2025-01-24',
+    '熱風のアリーナ': '2025-03-14',
+    'ロケット団の栄光': '2025-04-18',
+    'ブラックボルト': '2025-06-06',
+    'ホワイトフレア': '2025-06-06',
+    'メガブレイブ': '2025-08-01',
+    'メガシンフォニア': '2025-08-01',
+    'インフェルノX': '2025-09-26',
+    'MEGAドリーム': '2025-11-28',
+    'ムニキスゼロ': '2026-01-23',
+    'ニンジャスピナー': '2026-03-13',
+    'アビスアイ': '2026-05-22',
+    'ストームエメラルダ': '2026-07-31',
+    '30周年セレブレーション': '2026-09-16',
+    'ハドウシーカー': '2026-11-27',
+    // --- 🌐海外 ---
+    'OBSIDIAN FLAMES': '2023-08-11',
+    'PARADOX RIFT': '2023-11-03',
+    'TEMPORAL FORCES': '2024-03-22',
+    'SURGING SPARKS': '2024-11-08',
+    'JOURNEY TOGETHER': '2025-03-28',
+    'DESTINIED RIVALS': '2025-05-30',
+    'MEGA EVOLUTION': '2025-09-26',
+    'PHANTASMAL FLAMES': '2025-11-14',
+    '中国テラスタル': '2026-06-12'
+  };
+
+  // 発売日が多少前後しても構わず「必ずカテゴリの一番上に出したい」名前（無印の製品名で指定）。
+  // ハドウシーカーは発売日的にも最新だが、念のため明示的に最優先で固定しておく。
+  var PINNED_TOP_NAMES = ['ハドウシーカー'];
+
+  var VARIANT_SUFFIX_RE = /\((プレ|安|デラックス)\)$/;
+  var VARIANT_RANK = { '':0, 'プレ':1, 'デラックス':2, '安':3 };
+
+  function baseNameOf(name){
+    var m = VARIANT_SUFFIX_RE.exec(name);
+    return m ? name.slice(0, m.index) : name;
+  }
+  function variantRankOf(name){
+    var m = VARIANT_SUFFIX_RE.exec(name);
+    return VARIANT_RANK[m ? m[1] : ''];
+  }
+  function releaseDateValueOf(name){
+    var d = RELEASE_DATES[baseNameOf(name)];
+    return d ? Date.parse(d) : null;
+  }
+
+  // カテゴリ（国内→海外）→ピン留め→発売日（新しい順）→バリエーション順、の優先度で並べ替える。
+  // 一覧表示用の並び替えは必ずこの関数を通すこと（BOOTSTRAP_PACKS・サーバー取得後の両方）。
+  function sortPacksByCategoryAndRelease(list){
+    return list.slice().sort(function(a, b){
+      var ca = a.category === 'overseas' ? 1 : 0;
+      var cb = b.category === 'overseas' ? 1 : 0;
+      if(ca !== cb) return ca - cb;
+
+      var pa = PINNED_TOP_NAMES.indexOf(baseNameOf(a.name)) !== -1;
+      var pb = PINNED_TOP_NAMES.indexOf(baseNameOf(b.name)) !== -1;
+      if(pa !== pb) return pa ? -1 : 1;
+
+      var da = releaseDateValueOf(a.name);
+      var db = releaseDateValueOf(b.name);
+      if(da == null && db == null) return 0;
+      if(da == null) return -1; // 発売日未登録のアイテムはカテゴリの上側に出す
+      if(db == null) return 1;
+      if(da !== db) return db - da; // 新しい発売日(値が大きい方)を上に
+
+      // 同じ発売日の場合（複数シリーズが同日発売など）は、まず無印の製品名でまとめて、
+      // 同じ製品名グループ内だけを 無印→(プレ)→(デラックス)→(安) の順にする。
+      // これをしないと「Aのプレ」と「Bのプレ」が先に並んでしまい、同じ名前の家族が分裂する。
+      var ba = baseNameOf(a.name);
+      var bb = baseNameOf(b.name);
+      if(ba !== bb) return ba < bb ? -1 : 1;
+
+      return variantRankOf(a.name) - variantRankOf(b.name);
+    });
+  }
+
   // BOOTSTRAP_PACKS は「スプレッドシートから一度もカタログを取得できていない時」専用の初期値。
   // 連携設定後は、Apps Script側の「金額確認用」シートの内容（新しいパックや金額の自動更新を含む）
   // で自動的に上書きされる。常にこの配列を直接使わず、可変の PACKS を使うこと。
@@ -851,8 +967,11 @@
   var CATALOG_CACHE_KEY = 'packCounterCatalogCache_v1';
 
   // 可変のパック一覧。初期値は「前回取得したカタログのキャッシュ」→無ければ BOOTSTRAP_PACKS。
+  // どちらの場合も、発売日ベースの並び替えを必ず通してから使う。
   var cachedCatalog = loadJSON(CATALOG_CACHE_KEY, null);
-  var PACKS = (Array.isArray(cachedCatalog) && cachedCatalog.length > 0) ? cachedCatalog : BOOTSTRAP_PACKS;
+  var PACKS = sortPacksByCategoryAndRelease(
+    (Array.isArray(cachedCatalog) && cachedCatalog.length > 0) ? cachedCatalog : BOOTSTRAP_PACKS
+  );
 
   var PACKS_BY_NAME = {};
   function rebuildPacksByName(){
@@ -1058,12 +1177,9 @@
         };
       });
     // スプレッドシート上は新規アイテムが末尾に追加されるため、見出しが分裂しないよう
-    // 国内→海外の順に安定ソートし直す（同じカテゴリ内の並び順は保たれる）。
-    mapped.sort(function(a, b){
-      var ra = a.category === 'overseas' ? 1 : 0;
-      var rb = b.category === 'overseas' ? 1 : 0;
-      return ra - rb;
-    });
+    // 国内→海外、かつ各カテゴリ内は発売日が新しい順（同じ製品の(プレ)(安)等は無印にまとめる）
+    // で並び替える。
+    mapped = sortPacksByCategoryAndRelease(mapped);
 
     // 内容が前回と完全に同じなら一覧を作り直さない。
     // （ログ保存/削除のたびに毎回カタログを取り直すため、ここで無駄な作り直しを省かないと
