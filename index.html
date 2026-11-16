@@ -859,8 +859,16 @@
     var m = VARIANT_SUFFIX_RE.exec(name);
     return VARIANT_RANK[m ? m[1] : ''];
   }
-  function releaseDateValueOf(name){
-    var d = RELEASE_DATES[baseNameOf(name)];
+  // 発売日は「サーバー(金額確認用の発売日列。経費入力アプリが新規追加時に書き込む) → 無ければ
+  // このファイルに埋め込んだ RELEASE_DATES（古いアイテム用の手動表） → どちらも無ければ不明」
+  // の優先順位で決める。item.release が無い古いキャッシュ（この変更より前に取得したカタログ）
+  // でも問題なく動くよう、item.release が未定義のケースも許容する。
+  function releaseDateValueOf(item){
+    if(item && item.release){
+      var t = Date.parse(item.release);
+      if(!isNaN(t)) return t;
+    }
+    var d = RELEASE_DATES[baseNameOf(item.name)];
     return d ? Date.parse(d) : null;
   }
 
@@ -876,8 +884,8 @@
       var pb = PINNED_TOP_NAMES.indexOf(baseNameOf(b.name)) !== -1;
       if(pa !== pb) return pa ? -1 : 1;
 
-      var da = releaseDateValueOf(a.name);
-      var db = releaseDateValueOf(b.name);
+      var da = releaseDateValueOf(a);
+      var db = releaseDateValueOf(b);
       if(da == null && db == null) return 0;
       if(da == null) return -1; // 発売日未登録のアイテムはカテゴリの上側に出す
       if(db == null) return 1;
@@ -1173,7 +1181,8 @@
           color: row.color || 'グレー',
           category: row.category === 'overseas' ? 'overseas' : 'domestic',
           packRemain: row.packRemain,
-          boxRemain: row.boxRemain
+          boxRemain: row.boxRemain,
+          release: row.release || null // 金額確認用の発売日列（経費入力アプリが書き込む）。無ければ null
         };
       });
     // スプレッドシート上は新規アイテムが末尾に追加されるため、見出しが分裂しないよう
